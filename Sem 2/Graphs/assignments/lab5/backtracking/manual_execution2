@@ -1,0 +1,16 @@
+3 2
+0 1
+1 2
+
+call(0): cycle=[0], processing={0}
+  neighbour 1, not visited
+  call(1): cycle=[0,1], processing={0,1}
+    neighbour 2, not visited
+    call(2): cycle=[0,1,2], processing={0,1,2}
+      no neighbours → backtrack
+    cycle=[0,1], processing={0,1}
+  no more neighbours → backtrack
+cycle=[0], processing={0}
+no more neighbours → backtrack
+cycle=[], processing={}
+

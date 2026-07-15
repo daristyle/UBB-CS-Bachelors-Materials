@@ -1,0 +1,87 @@
+=================    TASK 1    ====================
+Implement the following task using 2 ASM submodules and 1 main C/C++ module.
+You may copy & paste this task inside your source code if it makes it easier for you to implement it.
+
+Write the main.c/main.cpp where you read the following:
+* on the first line, you read N - a number greater than 0
+* on the next N lines, you read s[i] - a string made up of letters, a-z, A-Z, and digits, 0-9.
+
+For each s[i], sum the digits inside the word (2.5p):
+* must be implemented inside sum_digits.asm
+* if there are no digits, return 0
+* suggestion: implement sum_digits(const char* string)
+
+If the number of vowels is a perfect square, add it to the total sum (1.5p):
+* must be implemented inside perfect_square.asm
+* suggestion: implement an is_perfect_square function inside the ASM module
+* if you skip checking for the number to be a perfect square, just add it to the total sum.
+
+Write the total sum in a file called sum_of_squares.txt.
+
+=================   EXAMPLES   =====================
+>>> INPUT 1 (console):
+    1
+    a1b2c -> 3 (not perfect square)
+>>> OUTPUT 1 (sum_of_squares.txt):
+    0
+
+>>> INPUT 2 (console):
+    3
+    abc123 -> 6 (not perfect square)
+    test4 -> 4 (perfect square: 2*2)
+    hello -> 0 (perfect square: 0*0)
+>>> OUTPUT 2 (sum_of_squares.txt):
+    4
+
+>>> INPUT 3 (console):
+    4
+    a1b2c1 -> 4 (perfect square: 2*2)
+    x9y -> 9 (perfect square: 3*3)
+    Code2025 -> 9 (perfect square: 3*3)
+    noDigits -> 0 (perfect square: 0*0)
+>>> OUTPUT 3 (sum_of_squares.txt):
+    22
+
+=================    GRADING   =====================
+GRADE 4  : you can compile 2 ASM + 1 C/C++ module, even if they are empty
+GRADE 7  : a complete solution written in a single ASM file
+GRADE 8.5: a complete solution written using 3 modules, but only using ASM
+GRADE 9.5: a complete solution written using 2 ASM + 1 C/C++ module, but with std::cin and std::cout
+GRADE 10 : a complete solution written using 2 ASM + 1 C/C++ module and the C (printf, scanf) I/O functions
+
+=============== ALLOWED FUNCTIONS ==================
+printf    https://cplusplus.com/reference/cstdio/printf/
+scanf     https://cplusplus.com/reference/cstdio/scanf/
+fprintf   https://cplusplus.com/reference/cstdio/fprintf/
+fscanf    https://cplusplus.com/reference/cstdio/fscanf/
+fread     https://cplusplus.com/reference/cstdio/fread/
+fopen     https://cplusplus.com/reference/cstdio/fopen/
+fclose    https://cplusplus.com/reference/cstdio/fclose/
+
+=================  OTHER TIPS  =====================
+* use indentation and add spaces to separate logical parts of your code
+* if you want, you can only implement the I/O in the main C module
+* if possible, you can also implement the I/O in the ASM modules
+* any C/C++ compilation is valid, i.e., you can choose between MinGW OR Visual Studio,
+      and also you can choose between using Windows CMD, Windows PowerShell, VSCode, etc.
+      
+==========  SUBMITTING YOUR SOLUTION  ==============
+If you are done early, you can send the solution faster.
+I will try to run your solution until everybody else finishes their exam.
+If the solution works, I will give you your grades faster.
+We might not have time to grade everybody else - grading will be finished throughout the weekend.
+Please send your modules in Teams as separate text messages OR as separate files OR as an archive
+
+============  OTHER DOCUMENTATION  =================
+https://www.cs.ubbcluj.ro/~diana.sotropa/teaching/asc/practic/html/
+https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/crt-alphabetical-function-reference?view=msvc-160&viewFallbackFrom=vs-2017
+https://en.cppreference.com/w/cpp.html
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab8-teorie.php
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab11-teorie.php
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab12-teorie.php
+
+============ ALLOWED ASM INSTRUCTIONS ==============
+For any other instructions, please ask.
+
+ADD, SUB, ADC, SBB, MUL, DIV, IDIV, IMUL, AND, OR, XOR, NOT, PUSH, POP, PUSHAD, POPAD,
+CALL, RET, MOV, INC, CMP, JMP, JXX, DEC, LEA, SHL, SHR, SAL, SAR, ROL, ROR, RCL, RCR

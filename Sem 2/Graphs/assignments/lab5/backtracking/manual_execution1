@@ -1,0 +1,11 @@
+3 3
+0 1
+1 2
+2 0
+
+call(0): cycle=[0], processing={0}
+  neighbour 1, not visited
+  call(1): cycle=[0,1], processing={0,1}
+    neighbour 2, not visited
+    call(2): cycle=[0,1,2], processing={0,1,2}
+      neighbour 0, visited, 0==target, size=3==noVertices → FOUND

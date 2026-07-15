@@ -1,0 +1,51 @@
+5 10
+0 1
+0 2
+0 3
+0 4
+1 0
+1 2
+1 4
+2 0
+3 1
+4 2
+
+s = 4  t = 0
+
+forwardBFS
+
+INITIAL
+q = [4]
+parent = [4: 4]
+ITERATION 1
+node = 4
+q = []
+parent = [4: 4]
+neighbour = 2
+q = [2]
+parent = [4: 4, 2: 4]
+ITERATION 2
+node = 2
+q = []
+parebt = [4: 4, 2: 4]
+neighbour = 0
+q = [0]
+parent = [4: 4, 2: 4, 0: 2]
+WHILE ENDED
+return parent
+
+printPath
+parent = [4: 4, 2: 4, 0: 2]
+
+calls printPathRec(4, 0, 0, true)
+
+printPathRec(4, 0, 0, true)
+    calls PrintPathRec(4, 2, 1, false)
+        calls PrintPathRec(4, 4, 2, false)
+            prints "3\n4 -> "
+        prints "2 -> "
+    prints "0\n"
+
+output:
+3
+4 -> 2 -> 0

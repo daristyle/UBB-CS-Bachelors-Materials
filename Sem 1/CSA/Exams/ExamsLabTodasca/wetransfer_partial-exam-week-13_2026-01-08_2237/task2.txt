@@ -1,0 +1,94 @@
+=================    TASK 1    ====================
+Implement the following task using 2 ASM submodules and 1 main C/C++ module.
+You may copy & paste this task inside your source code if it makes it easier for you to implement it.
+
+Write the main.c/main.cpp where you read the following:
+* on the first line, you read N - a number greater than 0
+* on the next N lines, you read a[i] - a number between 0 and 10^6
+
+For each a[i], compute the reverse number (2.5p):
+* must be implemented inside reverse_number.asm
+* discard any 0 digits from the end
+* suggestion: implement int reverse_number(int num)
+* reverse of 123  -> 321
+* reverse of 1205 -> 5021
+* reverse of 3400 -> 43
+
+Add the square root of each reverse number to the total sum (1.5p):
+* must be implemented inside square_root.asm
+* suggestion: implement an int square_root function inside the ASM module
+* if you skip checking computing the square root, just add it to the total sum.
+* we will obviously NOT use any rational numbers
+* square root of 49 -> 7
+* square root of 52 -> 7
+* square root of 64 -> 8
+
+Write the total sum in a file called sum_of_roots.txt.
+
+=================   EXAMPLES   =====================
+>>> INPUT 1 (console):
+    1
+    49 -> reverse = 94 -> sqrt(94) = 9
+>>> OUTPUT 1 (sum_of_roots.txt):
+    9
+
+>>> INPUT 2 (console):
+    3
+    123 -> reverse = 321 -> sqrt(321) = 17
+    100 -> reverse = 1 -> sqrt(1) = 1
+    64 -> reverse = 46 -> sqrt(46) = 6
+>>> OUTPUT 2 (sum_of_roots.txt):
+    24
+
+>>> INPUT 3 (console):
+    4
+    1205 -> reverse = 5021 -> sqrt(5021) = 70
+    3400 -> reverse = 43 -> sqrt(43) = 6
+    49 -> reverse = 94 -> sqrt(94) = 9
+    100 -> reverse = 1 -> sqrt(1) = 1
+>>> OUTPUT 3 (sum_of_roots.txt):
+    86
+
+=================    GRADING   =====================
+GRADE 4  : you can compile 2 ASM + 1 C/C++ module, even if they are empty
+GRADE 7  : a complete solution written in a single ASM file
+GRADE 8.5: a complete solution written using 3 modules, but only using ASM
+GRADE 9.5: a complete solution written using 2 ASM + 1 C/C++ module, but with std::cin and std::cout
+GRADE 10 : a complete solution written using 2 ASM + 1 C/C++ module and the C (printf, scanf) I/O functions
+
+=============== ALLOWED FUNCTIONS ==================
+printf    https://cplusplus.com/reference/cstdio/printf/
+scanf     https://cplusplus.com/reference/cstdio/scanf/
+fprintf   https://cplusplus.com/reference/cstdio/fprintf/
+fscanf    https://cplusplus.com/reference/cstdio/fscanf/
+fread     https://cplusplus.com/reference/cstdio/fread/
+fopen     https://cplusplus.com/reference/cstdio/fopen/
+fclose    https://cplusplus.com/reference/cstdio/fclose/
+
+=================  OTHER TIPS  =====================
+* use indentation and add spaces to separate logical parts of your code
+* if you want, you can only implement the I/O in the main C module
+* if possible, you can also implement the I/O in the ASM modules
+* any C/C++ compilation is valid, i.e., you can choose between MinGW OR Visual Studio,
+      and also you can choose between using Windows CMD, Windows PowerShell, VSCode, etc.
+      
+==========  SUBMITTING YOUR SOLUTION  ==============
+If you are done early, you can send the solution faster.
+I will try to run your solution until everybody else finishes their exam.
+If the solution works, I will give you your grades faster.
+We might not have time to grade everybody else - grading will be finished throughout the weekend.
+Please send your modules in Teams as separate text messages OR as separate files OR as an archive
+
+============  OTHER DOCUMENTATION  =================
+https://www.cs.ubbcluj.ro/~diana.sotropa/teaching/asc/practic/html/
+https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/crt-alphabetical-function-reference?view=msvc-160&viewFallbackFrom=vs-2017
+https://en.cppreference.com/w/cpp.html
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab8-teorie.php
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab11-teorie.php
+https://www.cs.ubbcluj.ro/~vancea/asc/en-lab12-teorie.php
+
+============ ALLOWED ASM INSTRUCTIONS ==============
+For any other instructions, please ask.
+
+ADD, SUB, ADC, SBB, MUL, DIV, IDIV, IMUL, AND, OR, XOR, NOT, PUSH, POP, PUSHAD, POPAD,
+CALL, RET, MOV, INC, CMP, JMP, JXX, DEC, LEA, SHL, SHR, SAL, SAR, ROL, ROR, RCL, RCR

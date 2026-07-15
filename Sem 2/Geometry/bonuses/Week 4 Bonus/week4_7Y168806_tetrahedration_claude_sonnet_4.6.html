@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetrahedration Visualizer — Claude Sonnet 4.6</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a26;
+            --border: #2a2a3e;
+            --accent: #7c5cfc;
+            --accent2: #fc5c7d;
+            --accent3: #5cfcb8;
+            --text: #e8e8f0;
+            --text-dim: #6868a0;
+            --text-dimmer: #3a3a5c;
+            --tet-colors: #7c5cfc, #fc5c7d, #5cfcb8, #fcb85c, #5cb8fc, #fc5cf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+        .logo span { color: var(--accent); }
+
+        .meta {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .poly-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .poly-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            padding: 8px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            letter-spacing: 0.03em;
+        }
+        .poly-btn:hover { border-color: var(--accent); color: var(--accent); background: #1e1a2e; }
+        .poly-btn.active { border-color: var(--accent); background: #1e1a2e; color: var(--accent); box-shadow: 0 0 12px #7c5cfc22; }
+
+        .poly-btn.random-btn {
+            grid-column: 1 / -1;
+            border-style: dashed;
+            color: var(--accent3);
+            border-color: #3cfca040;
+        }
+        .poly-btn.random-btn:hover { border-color: var(--accent3); background: #0d2e22; }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .toggle input { display: none; }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 12px; height: 12px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .toggle input:checked ~ .toggle-track { background: #2a1a4e; border-color: var(--accent); }
+        .toggle input:checked ~ .toggle-thumb { left: 19px; background: var(--accent); }
+
+        .anim-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-primary:hover { background: #9070ff; box-shadow: 0 0 16px #7c5cfc44; }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+
+        .progress-wrap {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+
+        .progress-label {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .speed-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .speed-row label { font-size: 0.65rem; color: var(--text-dim); white-space: nowrap; }
+        .speed-row input[type=range] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 3px;
+        }
+
+        .info-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            padding: 3px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-key { color: var(--text-dim); }
+        .info-val { color: var(--accent3); font-weight: 600; }
+
+        /* CANVAS AREA */
+        .canvas-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg);
+            background-image:
+                    radial-gradient(ellipse 80% 60% at 50% 0%, #1a1030 0%, transparent 60%),
+                    radial-gradient(circle at 80% 80%, #0d1a2a 0%, transparent 50%);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        canvas:active { cursor: grabbing; }
+
+        .overlay-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: var(--text-dimmer);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .tet-counter {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.65rem;
+            pointer-events: none;
+        }
+        .tet-counter-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .tet-counter-label { color: var(--text-dim); margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">TETRA<span>HEDRATION</span></div>
+    <div class="meta">Polyhedra Decomposition Visualizer · Claude Sonnet 4.6</div>
+</header>
+
+<div class="main">
+    <div class="sidebar">
+
+        <div class="section">
+            <div class="section-label">Polyhedra</div>
+            <div class="poly-grid">
+                <button class="poly-btn active" onclick="selectShape('tetrahedron')">Tetrahedron</button>
+                <button class="poly-btn" onclick="selectShape('cube')">Cube</button>
+                <button class="poly-btn" onclick="selectShape('octahedron')">Octahedron</button>
+                <button class="poly-btn" onclick="selectShape('dodecahedron')">Dodecahedron</button>
+                <button class="poly-btn" onclick="selectShape('icosahedron')">Icosahedron</button>
+                <button class="poly-btn" onclick="selectShape('prism')">Hex Prism</button>
+                <button class="poly-btn random-btn" onclick="selectShape('random')">⟳ Random</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-label">Display</div>
+            <div class="toggle-row">
+                <span class="toggle-label">Show Wireframe</span>
+                <label class="toggle">
+                    <input type="checkbox" id="togWire" onchange="render()" checked>
+                    <div class="toggle-track"></div>
+                    <div class="toggle-thumb"></div>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Show Faces</span>
+                <label class="toggle">
+                    <input type="checkbox" id="togFaces" onchange="render()" checked>
+                    <div class="toggle-track"></div>
+                    <div class="toggle-thumb"></div>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Color Tetrahedra</span>
+                <label class="toggle">
+                    <input type="checkbox" id="togColors" onchange="render()" checked>
+                    <div class="toggle-track"></div>
+                    <div class="toggle-thumb"></div>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Show Normals</span>
+                <label class="toggle">
+                    <input type="checkbox" id="togNormals" onchange="render()">
+                    <div class="toggle-track"></div>
+                    <div class="toggle-thumb"></div>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Auto Rotate</span>
+                <label class="toggle">
+                    <input type="checkbox" id="togRotate" onchange="toggleAutoRotate()" checked>
+                    <div class="toggle-track"></div>
+                    <div class="toggle-thumb"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-label">Animation</div>
+            <div class="anim-controls">
+                <button class="btn-primary" id="btnAnimate" onclick="startAnimation()">▶ Animate Tetrahedration</button>
+                <button class="btn-secondary" onclick="resetAnimation()">↺ Reset</button>
+                <div class="speed-row">
+                    <label>Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5">
+                </div>
+                <div class="progress-wrap">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="progress-label" id="progressLabel">Ready</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-label">Info</div>
+            <div class="info-box">
+                <div class="info-row"><span class="info-key">Vertices</span><span class="info-val" id="iVerts">—</span></div>
+                <div class="info-row"><span class="info-key">Faces</span><span class="info-val" id="iFaces">—</span></div>
+                <div class="info-row"><span class="info-key">Tetrahedra</span><span class="info-val" id="iTets">—</span></div>
+                <div class="info-row"><span class="info-key">Visible Tets</span><span class="info-val" id="iVisible">—</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="canvas-wrap">
+        <canvas id="c"></canvas>
+        <div class="tet-counter">
+            <div class="tet-counter-num" id="tetNum">0</div>
+            <div class="tet-counter-label">tetrahedra shown</div>
+        </div>
+        <div class="overlay-hint">Drag to rotate · Scroll to zoom</div>
+    </div>
+</div>
+
+<script>
+    // ==================== MATH HELPERS ====================
+    const Vec3 = {
+        add: (a,b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]],
+        sub: (a,b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]],
+        scale: (a,s) => [a[0]*s, a[1]*s, a[2]*s],
+        dot: (a,b) => a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+        cross: (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]],
+        len: a => Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]),
+        norm: a => { const l=Vec3.len(a)||1; return [a[0]/l,a[1]/l,a[2]/l]; },
+        avg: (...vs) => vs.reduce((a,b)=>Vec3.add(a,b),[0,0,0]).map(x=>x/vs.length)
+    };
+
+    function applyRotation(v, rx, ry) {
+        let [x,y,z] = v;
+        // Rotate around Y
+        let cx=Math.cos(ry), sx=Math.sin(ry);
+        [x,z] = [x*cx-z*sx, x*sx+z*cx];
+        // Rotate around X
+        let cy=Math.cos(rx), sy=Math.sin(rx);
+        [y,z] = [y*cy-z*sy, y*sy+z*cy];
+        return [x,y,z];
+    }
+
+    // ==================== SHAPE DEFINITIONS ====================
+    function makeTetrahedron() {
+        const v = [
+            [0, 1, 0],
+            [Math.sqrt(8/9), -1/3, 0],
+            [-Math.sqrt(2/9), -1/3, Math.sqrt(2/3)],
+            [-Math.sqrt(2/9), -1/3, -Math.sqrt(2/3)]
+        ];
+        return {
+            vertices: v,
+            faces: [[0,1,2],[0,2,3],[0,3,1],[1,3,2]]
+        };
+    }
+
+    function makeCube() {
+        const v = [];
+        for(let i=0;i<8;i++) v.push([(i&1)?1:-1, (i&2)?1:-1, (i&4)?1:-1]);
+        return {
+            vertices: v,
+            faces: [
+                [0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],
+                [0,2,6,4],[1,5,7,3]
+            ]
+        };
+    }
+
+    function makeOctahedron() {
+        return {
+            vertices: [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],
+            faces: [[0,2,4],[2,1,4],[1,3,4],[3,0,4],[2,0,5],[1,2,5],[3,1,5],[0,3,5]]
+        };
+    }
+
+    function makeIcosahedron() {
+        const t = (1+Math.sqrt(5))/2;
+        const verts = [
+            [-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],
+            [0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+            [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]
+        ].map(v=>Vec3.norm(v));
+        const faces = [
+            [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+            [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+            [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+            [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+        ];
+        return { vertices: verts, faces };
+    }
+
+    function makeDodecahedron() {
+        const phi = (1+Math.sqrt(5))/2;
+        const verts = [
+            [1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],
+            [-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1],
+            [0,1/phi,phi],[0,-1/phi,phi],[0,1/phi,-phi],[0,-1/phi,-phi],
+            [1/phi,phi,0],[-1/phi,phi,0],[1/phi,-phi,0],[-1/phi,-phi,0],
+            [phi,0,1/phi],[phi,0,-1/phi],[-phi,0,1/phi],[-phi,0,-1/phi]
+        ].map(v=>Vec3.norm(v));
+        const faces = [
+            [0,8,9,2,16],[0,16,17,1,12],[0,12,13,4,8],
+            [8,4,18,6,9],[9,6,15,14,2],[2,14,3,17,16],
+            [17,3,11,10,1],[1,10,5,13,12],[13,5,19,18,4],
+            [18,19,7,15,6],[15,7,11,3,14],[11,7,19,5,10]
+        ];
+        return { vertices: verts, faces };
+    }
+
+    function makeHexPrism() {
+        const verts = [];
+        for(let j=0;j<2;j++) for(let i=0;i<6;i++) {
+            const a = i*Math.PI/3;
+            verts.push([Math.cos(a), j===0?-0.8:0.8, Math.sin(a)]);
+        }
+        const faces = [];
+        // Top/bottom
+        faces.push([0,1,2,3,4,5]);
+        faces.push([11,10,9,8,7,6]);
+        // Sides
+        for(let i=0;i<6;i++) faces.push([i,(i+1)%6,(i+1)%6+6,i+6]);
+        return { vertices: verts, faces };
+    }
+
+    function makeRandom() {
+        // Convex hull of random points
+        const n = 8 + Math.floor(Math.random()*8);
+        const pts = Array.from({length:n}, () => Vec3.norm([
+            Math.random()*2-1, Math.random()*2-1, Math.random()*2-1
+        ]));
+        // Use gift-wrapping style convex hull (simplified via incremental)
+        return convexHull(pts);
+    }
+
+    function convexHull(points) {
+        // Simple convex hull using 3D gift wrapping
+        // For robustness, use a simpler approach: find extreme triangle, then expand
+        if(points.length < 4) return makeTetrahedron();
+
+        let faces = [];
+
+        // Find initial tetrahedron
+        const p0 = points[0];
+        let p1 = points[1];
+        // Find most distant from p0
+        let maxD = 0;
+        for(let p of points) {
+            const d = Vec3.len(Vec3.sub(p, p0));
+            if(d > maxD) { maxD = d; p1 = p; }
+        }
+
+        let p2 = points[2];
+        let maxArea = 0;
+        for(let p of points) {
+            if(p === p0 || p === p1) continue;
+            const e1 = Vec3.sub(p1, p0);
+            const e2 = Vec3.sub(p, p0);
+            const area = Vec3.len(Vec3.cross(e1, e2));
+            if(area > maxArea) { maxArea = area; p2 = p; }
+        }
+
+        let p3 = points[3];
+        let maxVol = 0;
+        for(let p of points) {
+            if(p === p0 || p === p1 || p === p2) continue;
+            const e1 = Vec3.sub(p1, p0);
+            const e2 = Vec3.sub(p2, p0);
+            const e3 = Vec3.sub(p, p0);
+            const vol = Math.abs(Vec3.dot(e3, Vec3.cross(e1, e2)));
+            if(vol > maxVol) { maxVol = vol; p3 = p; }
+        }
+
+        // Build faces ensuring outward normals
+        const center = Vec3.avg(p0, p1, p2, p3);
+        const tets = [[p0,p1,p2],[p0,p2,p3],[p0,p3,p1],[p1,p3,p2]];
+
+        // Add all hull faces using vertex indices
+        const vMap = new Map();
+        const verts = [];
+        function addV(p) {
+            const key = p.map(x=>x.toFixed(6)).join(',');
+            if(!vMap.has(key)) { vMap.set(key, verts.length); verts.push(p); }
+            return vMap.get(key);
+        }
+
+        for(let p of points) addV(p);
+
+        // Simple approach: add outer shell faces of this point set
+        // Build proper convex hull using visibility approach
+        const hullFaces = [];
+        const ai = addV(p0), bi = addV(p1), ci = addV(p2), di = addV(p3);
+
+        function faceNormal(a,b,c) {
+            return Vec3.cross(Vec3.sub(b,a), Vec3.sub(c,a));
+        }
+        function centroid(a,b,c) { return Vec3.avg(a,b,c); }
+
+        function addFace(i,j,k) {
+            const a=verts[i], b=verts[j], c=verts[k];
+            const n = faceNormal(a,b,c);
+            const cen = centroid(a,b,c);
+            const toCenter = Vec3.sub(center, cen);
+            if(Vec3.dot(n, toCenter) > 0) hullFaces.push([i,k,j]);
+            else hullFaces.push([i,j,k]);
+        }
+
+        addFace(ai,bi,ci); addFace(ai,ci,di); addFace(ai,di,bi); addFace(bi,di,ci);
+
+        // Expand hull incrementally
+        let openEdges = [];
+        const hullSet = new Set([''+ai+','+bi+','+ci,''+ai+','+ci+','+di,''+ai+','+di+','+bi,''+bi+','+di+','+ci]);
+
+        for(let pi=0; pi<verts.length; pi++) {
+            const p = verts[pi];
+            // Find visible faces
+            const visible = [];
+            const notVisible = [];
+            for(let f of hullFaces) {
+                const a=verts[f[0]], b=verts[f[1]], c=verts[f[2]];
+                const n = faceNormal(a,b,c);
+                const toP = Vec3.sub(p, a);
+                if(Vec3.dot(n, toP) > 1e-10) visible.push(f);
+                else notVisible.push(f);
+            }
+            if(visible.length === 0) continue;
+
+            // Find horizon edges
+            const edgeCount = new Map();
+            for(let f of visible) {
+                const edges = [[f[0],f[1]],[f[1],f[2]],[f[2],f[0]]];
+                for(let e of edges) {
+                    const key = e[0]+','+e[1];
+                    const rkey = e[1]+','+e[0];
+                    edgeCount.set(rkey, (edgeCount.get(rkey)||0)+1);
+                    if(!edgeCount.has(key)) edgeCount.set(key, 0);
+                }
+            }
+
+            // Add new faces from horizon to new point
+            const newFaces = [...notVisible];
+            for(let [k,v] of edgeCount) {
+                if(v === 0) {
+                    const [a,b] = k.split(',').map(Number);
+                    // Check if this edge borders a non-visible face
+                    let isBorder = false;
+                    for(let f of notVisible) {
+                        const edges = [[f[0],f[1]],[f[1],f[2]],[f[2],f[0]]];
+                        for(let e of edges) {
+                            if((e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a)) { isBorder=true; break; }
+                        }
+                        if(isBorder) break;
+                    }
+                    if(isBorder) newFaces.push([a,pi,b]);
+                }
+            }
+
+            if(newFaces.length > notVisible.length) {
+                hullFaces.length = 0;
+                hullFaces.push(...newFaces);
+            }
+        }
+
+        return { vertices: verts, faces: hullFaces.length > 0 ? hullFaces : [[ai,bi,ci],[ai,ci,di],[ai,di,bi],[bi,di,ci]] };
+    }
+
+    // ==================== TETRAHEDRATION ====================
+    function triangulate(face, vertices) {
+        // Fan triangulation from first vertex
+        const tris = [];
+        for(let i=1;i<face.length-1;i++) {
+            tris.push([face[0], face[i], face[i+1]]);
+        }
+        return tris;
+    }
+
+    function tetrahedrate(shape) {
+        const { vertices, faces } = shape;
+        // Find centroid of the entire polyhedron
+        const centroid = Vec3.avg(...vertices);
+        const tets = [];
+
+        for(let face of faces) {
+            // Triangulate the face
+            const tris = triangulate(face, vertices);
+            for(let tri of tris) {
+                // Create a tetrahedron from triangle + centroid
+                // Ensure correct winding (outward normal)
+                const a = vertices[tri[0]], b = vertices[tri[1]], c = vertices[tri[2]];
+                const n = Vec3.cross(Vec3.sub(b,a), Vec3.sub(c,a));
+                const toCenter = Vec3.sub(centroid, a);
+                if(Vec3.dot(n, toCenter) > 0) {
+                    tets.push([tri[0], tri[2], tri[1], vertices.length]);
+                } else {
+                    tets.push([tri[0], tri[1], tri[2], vertices.length]);
+                }
+            }
+        }
+
+        return {
+            vertices: [...vertices, centroid],
+            tetrahedra: tets
+        };
+    }
+
+    // ==================== RENDERER ====================
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let state = {
+        shape: null,
+        tetData: null,
+        rotX: 0.4, rotY: 0.6,
+        zoom: 1,
+        dragging: false,
+        lastMX: 0, lastMY: 0,
+        autoRotate: true,
+        animating: false,
+        visibleTets: 0,
+        animFrame: null,
+        animTimeout: null
+    };
+
+    const COLORS = [
+        '#7c5cfc','#fc5c7d','#5cfcb8','#fcb85c','#5cb8fc','#fc5cf8',
+        '#c8fc5c','#fc8c5c','#5cfce0','#b85cfc','#5c8cfc','#fc5c5c'
+    ];
+
+    function project(v, W, H, zoom) {
+        const [x,y,z] = applyRotation(v, state.rotX, state.rotY);
+        const fov = 3.5;
+        const scale = (W * 0.32 * zoom) / (z + fov);
+        return [W/2 + x*scale, H/2 - y*scale, z];
+    }
+
+    function drawFace(pts2d, color, alpha, wire) {
+        if(pts2d.length < 3) return;
+        ctx.beginPath();
+        ctx.moveTo(pts2d[0][0], pts2d[0][1]);
+        for(let i=1;i<pts2d.length;i++) ctx.lineTo(pts2d[i][0], pts2d[i][1]);
+        ctx.closePath();
+        if(document.getElementById('togFaces').checked) {
+            ctx.fillStyle = color + Math.floor(alpha*255).toString(16).padStart(2,'0');
+            ctx.fill();
+        }
+        if(wire) {
+            ctx.strokeStyle = color + 'cc';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+        }
+    }
+
+    function render() {
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0,0,W,H);
+        if(!state.shape) return;
+
+        const showWire = document.getElementById('togWire').checked;
+        const showColors = document.getElementById('togColors').checked;
+        const showNormals = document.getElementById('togNormals').checked;
+
+        const { vertices, faces } = state.shape;
+        const { tetData, visibleTets } = state;
+
+        if(tetData && visibleTets > 0) {
+            // Draw tetrahedra
+            const { vertices: tv, tetrahedra } = tetData;
+            const nShow = Math.min(visibleTets, tetrahedra.length);
+
+            // Collect tetrahedra faces for sorting
+            const drawItems = [];
+            for(let ti=0; ti<nShow; ti++) {
+                const tet = tetrahedra[ti];
+                const tetFaces = [
+                    [tet[0],tet[1],tet[2]],
+                    [tet[0],tet[2],tet[3]],
+                    [tet[0],tet[3],tet[1]],
+                    [tet[1],tet[3],tet[2]]
+                ];
+                const color = showColors ? COLORS[ti % COLORS.length] : '#7c5cfc';
+                for(let f of tetFaces) {
+                    const pts3d = f.map(i=>applyRotation(tv[i], state.rotX, state.rotY));
+                    const avgZ = pts3d.reduce((s,p)=>s+p[2],0)/3;
+                    // Backface cull
+                    const a=pts3d[0], b=pts3d[1], c=pts3d[2];
+                    const nx = (b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]);
+                    const ny = (b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]);
+                    const nz = (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+                    drawItems.push({ pts3d, avgZ, color, ti, nz, nx, ny, f, verts: tv });
+                }
+            }
+
+            drawItems.sort((a,b)=>a.avgZ-b.avgZ);
+
+            for(let item of drawItems) {
+                const pts2d = item.pts3d.map(p=>{
+                    const fov=3.5, scale=(W*0.32*state.zoom)/(p[2]+fov);
+                    return [W/2+p[0]*scale, H/2-p[1]*scale];
+                });
+                const light = Math.max(0.15, Math.min(1, (item.nz+1.5)/2.5));
+                drawFace(pts2d, item.color, light*0.55, showWire);
+
+                if(showNormals) {
+                    // Draw face normal
+                    const cen = [
+                        item.pts3d.reduce((s,p)=>s+p[0],0)/3,
+                        item.pts3d.reduce((s,p)=>s+p[1],0)/3,
+                        item.pts3d.reduce((s,p)=>s+p[2],0)/3
+                    ];
+                    const nl = Math.sqrt(item.nx*item.nx+item.ny*item.ny+item.nz*item.nz)||1;
+                    const n = [item.nx/nl*0.2, item.ny/nl*0.2, item.nz/nl*0.2];
+                    const tip = [cen[0]+n[0], cen[1]+n[1], cen[2]+n[2]];
+                    const fov=3.5;
+                    const s1=(W*0.32*state.zoom)/(cen[2]+fov);
+                    const s2=(W*0.32*state.zoom)/(tip[2]+fov);
+                    const cx=W/2+cen[0]*s1, cy=H/2-cen[1]*s1;
+                    const tx=W/2+tip[0]*s2, ty=H/2-tip[1]*s2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx,cy); ctx.lineTo(tx,ty);
+                    ctx.strokeStyle='#5cfcb8aa';
+                    ctx.lineWidth=1;
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(tx,ty,2,0,Math.PI*2);
+                    ctx.fillStyle='#5cfcb8';
+                    ctx.fill();
+                }
+            }
+
+            // Draw original wireframe outline on top if not fully tetrahedrated
+            if(visibleTets < tetrahedra.length) {
+                drawOriginalWireframe(vertices, faces, W, H, 0.3);
+            }
+        } else {
+            // Draw original polyhedron
+            drawOriginalShape(vertices, faces, W, H, showWire, showNormals);
+        }
+
+        // Update counter
+        const shown = tetData ? Math.min(visibleTets, tetData.tetrahedra.length) : 0;
+        document.getElementById('tetNum').textContent = shown;
+        document.getElementById('iVisible').textContent = shown;
+    }
+
+    function drawOriginalShape(vertices, faces, W, H, showWire, showNormals) {
+        const drawItems = [];
+        for(let fi=0; fi<faces.length; fi++) {
+            const face = faces[fi];
+            const pts3d = face.map(i=>applyRotation(vertices[i], state.rotX, state.rotY));
+            const avgZ = pts3d.reduce((s,p)=>s+p[2],0)/pts3d.length;
+            const a=pts3d[0], b=pts3d[1], c=pts3d[2];
+            const nz=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+            const nx=(b[1]-a[1])*(c[2]-a[2])-(b[2]-a[2])*(c[1]-a[1]);
+            const ny=(b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2]);
+            drawItems.push({pts3d, avgZ, nz, nx, ny});
+        }
+        drawItems.sort((a,b)=>a.avgZ-b.avgZ);
+
+        for(let item of drawItems) {
+            const pts2d = item.pts3d.map(p=>{
+                const fov=3.5, scale=(W*0.32*state.zoom)/(p[2]+fov);
+                return [W/2+p[0]*scale, H/2-p[1]*scale];
+            });
+            const light = Math.max(0.2, Math.min(1, (item.nz+1.5)/2.5));
+            drawFace(pts2d, '#7c5cfc', light*0.45, showWire);
+
+            if(showNormals) {
+                const cen = [
+                    item.pts3d.reduce((s,p)=>s+p[0],0)/item.pts3d.length,
+                    item.pts3d.reduce((s,p)=>s+p[1],0)/item.pts3d.length,
+                    item.pts3d.reduce((s,p)=>s+p[2],0)/item.pts3d.length,
+                ];
+                const nl=Math.sqrt(item.nx**2+item.ny**2+item.nz**2)||1;
+                const n=[item.nx/nl*0.2,item.ny/nl*0.2,item.nz/nl*0.2];
+                const tip=[cen[0]+n[0],cen[1]+n[1],cen[2]+n[2]];
+                const fov=3.5;
+                const s1=(W*0.32*state.zoom)/(cen[2]+fov);
+                const s2=(W*0.32*state.zoom)/(tip[2]+fov);
+                ctx.beginPath();
+                ctx.moveTo(W/2+cen[0]*s1, H/2-cen[1]*s1);
+                ctx.lineTo(W/2+tip[0]*s2, H/2-tip[1]*s2);
+                ctx.strokeStyle='#5cfcb8aa'; ctx.lineWidth=1; ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(W/2+tip[0]*s2, H/2-tip[1]*s2, 2,0,Math.PI*2);
+                ctx.fillStyle='#5cfcb8'; ctx.fill();
+            }
+        }
+    }
+
+    function drawOriginalWireframe(vertices, faces, W, H, alpha) {
+        ctx.strokeStyle = `rgba(124,92,252,${alpha})`;
+        ctx.lineWidth = 0.5;
+        const edgesDrawn = new Set();
+        for(let face of faces) {
+            for(let i=0;i<face.length;i++) {
+                const a=face[i], b=face[(i+1)%face.length];
+                const key = Math.min(a,b)+'-'+Math.max(a,b);
+                if(edgesDrawn.has(key)) continue;
+                edgesDrawn.add(key);
+                const pa = applyRotation(vertices[a], state.rotX, state.rotY);
+                const pb = applyRotation(vertices[b], state.rotX, state.rotY);
+                const fov=3.5;
+                const sa=(W*0.32*state.zoom)/(pa[2]+fov);
+                const sb=(W*0.32*state.zoom)/(pb[2]+fov);
+                ctx.beginPath();
+                ctx.moveTo(W/2+pa[0]*sa, H/2-pa[1]*sa);
+                ctx.lineTo(W/2+pb[0]*sb, H/2-pb[1]*sb);
+                ctx.stroke();
+            }
+        }
+    }
+
+    // ==================== ANIMATION ====================
+    let animRunning = false;
+    let animTetIndex = 0;
+
+    function startAnimation() {
+        if(!state.tetData) return;
+        if(animRunning) {
+            pauseAnimation();
+            return;
+        }
+        animRunning = true;
+        document.getElementById('btnAnimate').textContent = '⏸ Pause';
+        animStep();
+    }
+
+    function animStep() {
+        if(!animRunning) return;
+        const total = state.tetData.tetrahedra.length;
+        if(animTetIndex >= total) {
+            animRunning = false;
+            document.getElementById('btnAnimate').textContent = '▶ Animate Tetrahedration';
+            document.getElementById('progressLabel').textContent = 'Complete!';
+            return;
+        }
+
+        state.visibleTets = animTetIndex + 1;
+        animTetIndex++;
+
+        const pct = (animTetIndex / total * 100).toFixed(0);
+        document.getElementById('progressBar').style.width = pct+'%';
+        document.getElementById('progressLabel').textContent = `${animTetIndex} / ${total} tetrahedra`;
+
+        render();
+
+        const speed = parseInt(document.getElementById('speedSlider').value);
+        const delay = Math.max(50, 1200 - speed * 100);
+        state.animTimeout = setTimeout(animStep, delay);
+    }
+
+    function pauseAnimation() {
+        animRunning = false;
+        clearTimeout(state.animTimeout);
+        document.getElementById('btnAnimate').textContent = '▶ Resume';
+    }
+
+    function resetAnimation() {
+        animRunning = false;
+        clearTimeout(state.animTimeout);
+        animTetIndex = 0;
+        state.visibleTets = 0;
+        document.getElementById('btnAnimate').textContent = '▶ Animate Tetrahedration';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressLabel').textContent = 'Ready';
+        render();
+    }
+
+    // ==================== SHAPE SELECTION ====================
+    function selectShape(name) {
+        animRunning = false;
+        clearTimeout(state.animTimeout);
+        animTetIndex = 0;
+        state.visibleTets = 0;
+
+        document.querySelectorAll('.poly-btn').forEach(b=>b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        let shape;
+        switch(name) {
+            case 'tetrahedron': shape = makeTetrahedron(); break;
+            case 'cube': shape = makeCube(); break;
+            case 'octahedron': shape = makeOctahedron(); break;
+            case 'icosahedron': shape = makeIcosahedron(); break;
+            case 'dodecahedron': shape = makeDodecahedron(); break;
+            case 'prism': shape = makeHexPrism(); break;
+            case 'random': shape = makeRandom(); break;
+            default: shape = makeCube();
+        }
+
+        state.shape = shape;
+        state.tetData = tetrahedrate(shape);
+
+        document.getElementById('iVerts').textContent = shape.vertices.length;
+        document.getElementById('iFaces').textContent = shape.faces.length;
+        document.getElementById('iTets').textContent = state.tetData.tetrahedra.length;
+        document.getElementById('iVisible').textContent = 0;
+
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressLabel').textContent = 'Ready';
+        document.getElementById('btnAnimate').textContent = '▶ Animate Tetrahedration';
+        document.getElementById('tetNum').textContent = '0';
+
+        render();
+    }
+
+    // ==================== AUTO ROTATE ====================
+    let rotAnimId = null;
+    function toggleAutoRotate() {
+        if(document.getElementById('togRotate').checked) startAutoRotate();
+        else { cancelAnimationFrame(rotAnimId); rotAnimId=null; }
+    }
+
+    function startAutoRotate() {
+        function loop() {
+            if(!document.getElementById('togRotate').checked) return;
+            state.rotY += 0.005;
+            render();
+            rotAnimId = requestAnimationFrame(loop);
+        }
+        rotAnimId = requestAnimationFrame(loop);
+    }
+
+    // ==================== MOUSE / TOUCH ====================
+    canvas.addEventListener('mousedown', e => {
+        state.dragging = true;
+        state.lastMX = e.clientX; state.lastMY = e.clientY;
+        document.getElementById('togRotate').checked = false;
+        cancelAnimationFrame(rotAnimId);
+    });
+    window.addEventListener('mouseup', () => { state.dragging = false; });
+    window.addEventListener('mousemove', e => {
+        if(!state.dragging) return;
+        const dx = e.clientX - state.lastMX;
+        const dy = e.clientY - state.lastMY;
+        state.rotY += dx*0.008;
+        state.rotX += dy*0.008;
+        // Clamp vertical
+        state.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, state.rotX));
+        state.lastMX = e.clientX; state.lastMY = e.clientY;
+        render();
+    });
+
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        state.zoom *= e.deltaY < 0 ? 1.1 : 0.9;
+        state.zoom = Math.max(0.4, Math.min(2.5, state.zoom));
+        render();
+    }, {passive:false});
+
+    // Touch support
+    let lastTouchDist = 0;
+    canvas.addEventListener('touchstart', e => {
+        if(e.touches.length === 1) {
+            state.dragging = true;
+            state.lastMX = e.touches[0].clientX;
+            state.lastMY = e.touches[0].clientY;
+            document.getElementById('togRotate').checked = false;
+            cancelAnimationFrame(rotAnimId);
+        } else if(e.touches.length === 2) {
+            lastTouchDist = Math.hypot(
+                e.touches[0].clientX-e.touches[1].clientX,
+                e.touches[0].clientY-e.touches[1].clientY
+            );
+        }
+    }, {passive:true});
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if(e.touches.length === 1 && state.dragging) {
+            const dx = e.touches[0].clientX - state.lastMX;
+            const dy = e.touches[0].clientY - state.lastMY;
+            state.rotY += dx*0.008; state.rotX += dy*0.008;
+            state.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, state.rotX));
+            state.lastMX = e.touches[0].clientX; state.lastMY = e.touches[0].clientY;
+            render();
+        } else if(e.touches.length === 2) {
+            const d = Math.hypot(
+                e.touches[0].clientX-e.touches[1].clientX,
+                e.touches[0].clientY-e.touches[1].clientY
+            );
+            state.zoom *= d/lastTouchDist;
+            state.zoom = Math.max(0.4, Math.min(2.5, state.zoom));
+            lastTouchDist = d;
+            render();
+        }
+    }, {passive:false});
+    canvas.addEventListener('touchend', () => { state.dragging = false; });
+
+    // ==================== RESIZE ====================
+    function resize() {
+        const wrap = canvas.parentElement;
+        canvas.width = wrap.clientWidth;
+        canvas.height = wrap.clientHeight;
+        render();
+    }
+    window.addEventListener('resize', resize);
+
+    // ==================== INIT ====================
+    resize();
+    selectShape('cube');
+    startAutoRotate();
+
+    // Fake event for initial selectShape call
+    function selectShapeInit(name) {
+        let shape;
+        switch(name) {
+            case 'cube': shape = makeCube(); break;
+            default: shape = makeCube();
+        }
+        state.shape = shape;
+        state.tetData = tetrahedrate(shape);
+        document.getElementById('iVerts').textContent = shape.vertices.length;
+        document.getElementById('iFaces').textContent = shape.faces.length;
+        document.getElementById('iTets').textContent = state.tetData.tetrahedra.length;
+        document.getElementById('iVisible').textContent = 0;
+        render();
+    }
+
+    // Override initial call
+    selectShapeInit('cube');
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+RO: Dati o expresie regulara care stringuri formate exclusiv din secventa "abc", repetata de cel putin 3 ori, indiferent daca apare cu litere mari sau mici.
+
+EN: Give a regular expression that accepts strings containing only the sequence "abc", repetead at least 3 times, regardless whether it is upper or lower case.
+
+RO: Scrieți o comandă GREP care afișează liniile de lungime impară care încep si se termină cu o vocală.
+EN: Write a GREP command that displays the lines of odd length that start and end with a vowel.
+
+RO: Se consideră un fișier text care conține pe fiecare linie cel puțin 4 cuvinte (secvențe nevide de
+litere mari sau mici) separate prin SPAȚII. Scrieți două comenzi SED care interschimbă
+al doilea cuvânt cu penultimul cuvânt pe fiecare linie a acestui fișier.
+
+EN: Consider a text file that contains at least 4 words (non-empty sequences of uppercase or lowercase
+letters) separated by SPACES on each line. Write two SED commands that swap the second word
+with the next-to-last word on each line of this file.
+
+RO: Scrieţi o comandă AWK care afişează produsul celui de-al doilea şi penultimului câmp de pe fiecare linie dacă numărul de câmpuri ale liniei e cel puţin 3.
+
+EN: Write an AWK command that displays the product of the second and next-to-last field of each line if the number of fields on the line is at least 3.
+
+RO: Scrieti o linie de comanda in care programul B se executa doar daca programul A s-a executat cu success.
+
+EN: Write a command line in which program B is executed only if program A has executed successfully.
+
+RO: Scrieti un script Shell care ia dintr-un fisier a.txt perechi de nume de fisiere si il sterge pe al doilea daca primul exista deja.
+
+EN: Write a Shell script that reads from file a.txt pairs of file names and deletes the second file if the first already exists.
+
+RO: Considerand ca apelul fork se executa cu succes, cate procese fiu va crea programul de mai jos? Justificati raspunsul.
+
+EN: Considering that the fork call is executed successfully, how many child processes will be created by the program below? Justify your answer.
+
+    int main() {
+        while(wait(NULL) > 0)
+            if(fork() == 0) {
+                exit(0);
+            }
+        }
+        return 0;
+    }
+
+RO: Scrieti un apel exec care executa programul si argumentele date ca argumente programului ./a de mai jos (ex: ./a ls -l /etc/passwd)
+
+EN: Write an exec call that executes the program and arguments given as arguments to program ./a below (i.e. ./a ls -l /etc/passwd)
+
+    int main(int argc, char** argv) {
+        ...
+    }
+
+RO: Trimiteți șirul "Hello\nWorld\n" către comanda "grep -E o" folosind popen în modul scriere.
+EN: Send the string "Hello\nWorld\n" to the "grep -E o" command using popen in write mode.
+
+RO: Explicați ce se întâmplă dacă un proces încearcă să scrie intr-un pipe plin al cărui capăt de scriere a fost închis de toate celelalte procese.
+
+EN: Explain what happens if a process tries to write to a full pipe whose write end has been closed by all other processes.
+
+RO: Discutati durata de executie a programului de mai jos in functie de tipul si permisiunile fisierului abc.
+
+EN: Discuss the duration of the program below as a function of the abc file type and other relevant aspects.
+
+    int main() {
+        int f;
+        char c;
+        f = open("abc", O_RDONLY);
+        if(f >= 0) {
+            read(f, &c, 1);
+            close(f);
+        }
+        return 0;
+    }
+
+RO: Protejati sectiunea critica din programul de mai jos.
+EN: Protect the critical section in the program below.
+
+int n = 0;
+
+void* f(void* v){
+        if(n < 500) {
+            n++;
+        }
+        return NULL;
+}
+
+int main(){
+    pthread_t t;
+    pthread_create(&t, NULL, f, NULL);
+    pthread_join(t, NULL);
+    return 0;
+}
+
+RO: Asigurati-va ca maximum 3 persoane voteaza deodata.
+EN: Insure that at most 3 persons vote simultaneously.
+
+void* person(void* args){
+        printf("voting ...\n”);
+        return NULL;
+}
+
+int main(){
+        pthread_t t[100];
+        for(int i=0;i<100;i++){
+                pthread_create(&t[i], NULL, person, NULL);
+        }
+    for(int i=0;i<100;i++){
+                pthread_join(t[i], NULL);
+    }
+        return 0;
+}
+
+RO: Ce face functia pthread_cond_wait cu mutexul primit ca argument?
+EN: What does pthread_cond_wait do with the mutex it gets as an argument?
+
+RO: Cum ar fi afectata functionarea unui program daca toate mutex-urile s-ar inlocui cu rwlock-uri si toate apelurile mutex_lock s-ar inlocui cu rwlock_wrlock? Justificati raspunsul.
+
+EN: How would affect the functioning of a program the replacement of all mutexes with rwlocks and all calls to mutex_lock with rwlock_wrlock? Justify your answer.
+
+
+RO: Dati valori distincte pentru T, N1, N2, N3 (toate strict pozitive) pentru care programul de mai jos se termina corect.
+
+EN: Give distinct values for T, N1, N2, N3 (all strictly positive) for which the program below finishes correctly.
+
+#include <pthread.h>
+
+pthread_barrier_t b1, b2, b3;
+
+void* f1(void* a) { pthread_barrier_wait(&b1); return NULL; }
+void* f2(void* a) { pthread_barrier_wait(&b2); return NULL; }
+void* f3(void* a) { pthread_barrier_wait(&b3); return NULL; }
+
+int main() {
+    int T, N1, N2, N3;
+
+    pthread_t t[T][3];
+
+    pthread_barrier_init(&b1, NULL, N1);
+    pthread_barrier_init(&b2, NULL, N2);
+    pthread_barrier_init(&b3, NULL, N3);
+
+    for(int i=0; i<T; i++) {
+        pthread_create(&t[i][0], NULL, f1, NULL);
+        pthread_create(&t[i][1], NULL, f2, NULL);
+        pthread_create(&t[i][2], NULL, f3, NULL);
+    }
+
+    for(int i=0; i<T; i++) {
+        pthread_join(t[i][0], NULL);
+        pthread_join(t[i][1], NULL);
+        pthread_join(t[i][2], NULL);
+    }
+
+    pthread_barrier_destroy(&b1);
+    pthread_barrier_destroy(&b2);
+    pthread_barrier_destroy(&b3);
+    return 0;
+}
+
+RO: Ce puteţi face ca programator pentru a preveni deadlock-urile cauzate de blocarea unor mutexi? Justificaţi răspunsul.
+EN: What can you do as a software developer to prevent deadlocks caused by locking some mutexes? Justify your answer.
+
+RO: Care este diferenta dintre politicile de planificare SJF si STCF?
+EN: What is the difference between the SJF and STCF scheduling policies?
+
+RO: Un process are următoarea listă de zone de memorie nealocată: 32, 44, 98. Cum va arăta lista după două apeluri malloc(33) ştiind că se foloseşte algoritmul Worst Fit?
+
+EN: CA process has the following list of unallocated memory zones: 32, 44, 98. What will the list be after two malloc(33) requests given that it uses the Worst Fit algorithm?
+
+RO: Cum difera un link hard de unul simbolic?
+EN: What are the differences between a hard link and a symbolic link?

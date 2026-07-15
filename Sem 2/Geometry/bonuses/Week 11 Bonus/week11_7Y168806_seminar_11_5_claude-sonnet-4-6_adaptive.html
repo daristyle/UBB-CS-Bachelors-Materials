@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ellipsoid–Plane Intersection · claude-sonnet-4-6</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #070b12;
+    --surface: #0d1420;
+    --panel:   #111827;
+    --border:  #1e2d45;
+    --accent1: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #a78bfa;
+    --green:   #22d3a0;
+    --red:     #ff4d6d;
+    --yellow:  #fbbf24;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --dim:     #1e2d45;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ════════════════════ SIDEBAR ════════════════════ */
+  #sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #0d1420 0%, #0d1a2e 100%);
+    flex-shrink: 0;
+  }
+
+  #sidebar-header .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    opacity: 0.7;
+  }
+
+  #sidebar-header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  #sidebar-header h1 span { color: var(--accent1); }
+
+  /* scrollable input area */
+  #sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  #sidebar-body::-webkit-scrollbar { width: 3px; }
+  #sidebar-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── EQ BLOCKS ── */
+  .eq-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 13px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .eq-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .eq-block.ellipsoid::before { background: linear-gradient(90deg, var(--accent1), transparent); }
+  .eq-block.plane::before     { background: linear-gradient(90deg, var(--accent3), transparent); }
+
+  .eq-block-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 9px;
+  }
+  .eq-block-title .icon {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .eq-block.ellipsoid .icon { background: rgba(0,212,255,0.12); color: var(--accent1); }
+  .eq-block.plane     .icon { background: rgba(167,139,250,0.12); color: var(--accent3); }
+  .eq-block-title h2 { font-size: 12px; font-weight: 600; color: #fff; }
+
+  /* full-equation text row */
+  .eq-text-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .eq-text-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--accent1);
+    padding: 6px 9px;
+    border-radius: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .eq-block.plane .eq-text-input { color: var(--accent3); }
+  .eq-text-input:focus {
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+  }
+  .eq-block.plane .eq-text-input:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 2px rgba(167,139,250,0.1);
+  }
+  .eq-text-input::placeholder { color: var(--muted); opacity: 0.55; }
+
+  .eq-parse-btn {
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.22);
+    color: var(--accent1);
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+  .eq-block.plane .eq-parse-btn {
+    background: rgba(167,139,250,0.08);
+    border-color: rgba(167,139,250,0.22);
+    color: var(--accent3);
+  }
+  .eq-parse-btn:hover { opacity: 0.8; transform: scale(1.04); }
+
+  /* live formula display */
+  .eq-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 5px;
+    padding: 5px 8px;
+    margin-bottom: 9px;
+    border: 1px solid var(--dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .block-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+    opacity: 0.45;
+  }
+
+  /* param number inputs — compact 3-column for ellipsoid */
+  .param-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .param-grid.two-col { grid-template-columns: 1fr 1fr; }
+
+  .param-field label {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 3px;
+    letter-spacing: 0.4px;
+  }
+  .param-field input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 7px;
+    border-radius: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .param-field input[type="number"]:focus {
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+  }
+  .eq-block.plane .param-field input[type="number"]:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 2px rgba(167,139,250,0.08);
+  }
+
+  /* ── D SLIDER ── */
+  .slider-section { margin-top: 10px; }
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  .slider-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .slider-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    font-weight: 700;
+    min-width: 44px;
+    text-align: right;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px rgba(167,139,250,0.55);
+    cursor: pointer;
+    transition: box-shadow 0.18s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 12px rgba(167,139,250,0.85);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent3);
+    border: none;
+    cursor: pointer;
+  }
+  .slider-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5px;
+    color: var(--muted);
+    opacity: 0.45;
+    margin-top: 2px;
+  }
+
+  /* ── COMPUTE BUTTON ── */
+  #btn-compute {
+    margin: 0 14px 10px;
+    padding: 10px;
+    background: linear-gradient(135deg, #0077aa, #005599);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.4px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #btn-compute::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.18), transparent);
+    opacity: 0;
+    transition: opacity 0.18s;
+  }
+  #btn-compute:hover::after { opacity: 1; }
+  #btn-compute:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.18); }
+  #btn-compute:active { transform: translateY(0); }
+
+  /* ── LEGEND / FOOTER ── */
+  #sidebar-footer {
+    padding: 10px 14px 14px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .legend-title {
+    font-size: 9px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .legend-items { display: flex; flex-direction: column; gap: 5px; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-line { width: 18px; height: 2px; border-radius: 2px; flex-shrink: 0; }
+  .legend-plane {
+    width: 18px; height: 9px;
+    border-radius: 2px;
+    border: 1px solid rgba(167,139,250,0.5);
+    background: rgba(167,139,250,0.1);
+    flex-shrink: 0;
+  }
+  .controls-hint {
+    margin-top: 9px;
+    font-size: 9.5px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    line-height: 1.85;
+    opacity: 0.55;
+  }
+
+  /* ════════════════════ CANVAS AREA ════════════════════ */
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  canvas { display: block; }
+
+  #canvas-label {
+    position: absolute;
+    top: 14px; right: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.13);
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ── FLOATING RESULT PANEL (canvas overlay) ── */
+  #result-panel {
+    position: absolute;
+    bottom: 18px;
+    left: 16px;
+    width: 310px;
+    background: rgba(7, 11, 18, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 13px 15px;
+    font-size: 11.5px;
+    display: none;
+    animation: slideUp 0.28s ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  #result-panel.ellipse { border: 1px solid rgba(0,212,255,0.28); }
+  #result-panel.point   { border: 1px solid rgba(251,191,36,0.28); }
+  #result-panel.none    { border: 1px solid rgba(255,77,109,0.28); }
+
+  #result-panel .result-title {
+    font-weight: 600;
+    font-size: 12.5px;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #result-panel.ellipse .result-title { color: var(--accent1); }
+  #result-panel.point   .result-title { color: var(--yellow); }
+  #result-panel.none    .result-title { color: var(--red); }
+
+  #result-panel .result-data {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    line-height: 1.75;
+    color: var(--text);
+    opacity: 0.8;
+  }
+  #result-panel .result-data span { color: #fff; font-weight: 700; opacity: 1; }
+
+  /* intersection equation sub-section */
+  .eq-intersection {
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .eq-intersection-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 5px;
+    opacity: 0.85;
+  }
+  .eq-intersection-formula {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    line-height: 1.85;
+    color: var(--text);
+    opacity: 0.7;
+    word-break: break-all;
+  }
+  .eq-intersection-formula .hi { color: var(--accent2); font-weight: 700; opacity: 1; }
+
+  /* parse error flash */
+  .parse-error {
+    border-color: var(--red) !important;
+    box-shadow: 0 0 0 2px rgba(255,77,109,0.18) !important;
+  }
+
+  /* ── EXPRESSION INPUTS ── */
+  .param-field input.expr-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 7px;
+    border-radius: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .param-field input.expr-input:focus {
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+  }
+  .eq-block.plane .param-field input.expr-input:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 2px rgba(167,139,250,0.08);
+  }
+  .param-field input.expr-input.eval-ok {
+    border-color: rgba(34,211,160,0.45);
+  }
+  .param-field input.expr-input.eval-err {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .eval-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--green);
+    margin-top: 2px;
+    min-height: 11px;
+    transition: color 0.15s;
+  }
+  .eval-hint.err { color: var(--red); }
+
+  /* ── SQUARED MODE TOGGLE ── */
+  .mode-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+  .mode-toggle-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    flex: 1;
+  }
+  .toggle-pill {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .toggle-pill button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .toggle-pill button.active {
+    background: rgba(0,212,255,0.15);
+    color: var(--accent1);
+  }
+  .toggle-pill button:not(:last-child) {
+    border-right: 1px solid var(--border);
+  }
+
+  /* expr syntax hint bar */
+  .expr-syntax-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    opacity: 0.55;
+    margin-bottom: 7px;
+    letter-spacing: 0.2px;
+  }
+  .expr-syntax-hint span { color: var(--accent1); opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <div class="label">claude-sonnet-4-6 · seminar 11.5</div>
+    <h1>Ellipsoid–Plane<br><span>Intersection</span> Visualizer</h1>
+  </div>
+
+  <div id="sidebar-body">
+
+    <!-- ELLIPSOID -->
+    <div class="eq-block ellipsoid">
+      <div class="eq-block-title">
+        <div class="icon">◎</div>
+        <h2>Ellipsoid</h2>
+      </div>
+
+      <div class="eq-text-row">
+        <input type="text" id="eq-ellipsoid" class="eq-text-input"
+               placeholder="x²/9 + y²/4 + z²/2.25 = 1">
+        <button class="eq-parse-btn" onclick="parseEllipsoidInput()">Parse ▶</button>
+      </div>
+
+      <div class="block-divider"></div>
+
+      <div class="eq-formula" id="ellipsoid-formula">x²/9 + y²/4 + z²/2.25 = 1</div>
+
+      <!-- Input mode toggle -->
+      <div class="mode-toggle-row">
+        <span class="mode-toggle-label">INPUT MODE</span>
+        <div class="toggle-pill">
+          <button id="mode-btn-axis" class="active" onclick="setEllipsoidMode('axis')">a, b, c</button>
+          <button id="mode-btn-sq"   onclick="setEllipsoidMode('sq')">a², b², c²</button>
+        </div>
+      </div>
+
+      <div class="expr-syntax-hint">
+        <span>+</span> add &nbsp;<span>-</span> sub &nbsp;<span>*</span> mul &nbsp;<span>/</span> div &nbsp;<span>^</span> pow &nbsp;— supports expressions
+      </div>
+
+      <!-- 3 side-by-side expression fields -->
+      <div class="param-grid">
+        <div class="param-field">
+          <label id="label-ea">a (x-axis)</label>
+          <input type="text" id="ea" value="3" class="expr-input" placeholder="e.g. 3">
+          <div class="eval-hint" id="hint-ea"></div>
+        </div>
+        <div class="param-field">
+          <label id="label-eb">b (y-axis)</label>
+          <input type="text" id="eb" value="2" class="expr-input" placeholder="e.g. 2">
+          <div class="eval-hint" id="hint-eb"></div>
+        </div>
+        <div class="param-field">
+          <label id="label-ec">c (z-axis)</label>
+          <input type="text" id="ec" value="1.5" class="expr-input" placeholder="e.g. 3/2">
+          <div class="eval-hint" id="hint-ec"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANE -->
+    <div class="eq-block plane">
+      <div class="eq-block-title">
+        <div class="icon">▱</div>
+        <h2>Cutting Plane</h2>
+      </div>
+
+      <div class="eq-text-row">
+        <input type="text" id="eq-plane" class="eq-text-input"
+               placeholder="x + y + z = 1">
+        <button class="eq-parse-btn" onclick="parsePlaneInput()">Parse ▶</button>
+      </div>
+
+      <div class="block-divider"></div>
+
+      <div class="eq-formula" id="plane-formula">x + y + z = 1</div>
+
+      <div class="expr-syntax-hint">
+        <span>+</span> add &nbsp;<span>-</span> sub &nbsp;<span>*</span> mul &nbsp;<span>/</span> div &nbsp;<span>^</span> pow &nbsp;— supports expressions
+      </div>
+
+      <!-- A B C D in 2×2 grid -->
+      <div class="param-grid two-col">
+        <div class="param-field">
+          <label>A (x coeff)</label>
+          <input type="text" id="pA" value="1" class="expr-input" placeholder="e.g. 1">
+          <div class="eval-hint" id="hint-pA"></div>
+        </div>
+        <div class="param-field">
+          <label>B (y coeff)</label>
+          <input type="text" id="pB" value="1" class="expr-input" placeholder="e.g. 1">
+          <div class="eval-hint" id="hint-pB"></div>
+        </div>
+        <div class="param-field">
+          <label>C (z coeff)</label>
+          <input type="text" id="pC" value="1" class="expr-input" placeholder="e.g. 1">
+          <div class="eval-hint" id="hint-pC"></div>
+        </div>
+        <div class="param-field">
+          <label>D (offset)</label>
+          <input type="text" id="pD" value="1" class="expr-input" placeholder="e.g. 1/2">
+          <div class="eval-hint" id="hint-pD"></div>
+        </div>
+      </div>
+
+      <!-- D slider -->
+      <div class="slider-section">
+        <div class="slider-header">
+          <span class="slider-label">D — PLANE OFFSET</span>
+          <span class="slider-value" id="slider-d-val">1.00</span>
+        </div>
+        <input type="range" id="plane-d-slider" min="-10" max="10" step="0.05" value="1">
+        <div class="slider-range-labels">
+          <span id="slider-min-label">-10</span>
+          <span>0</span>
+          <span id="slider-max-label">+10</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar-body -->
+
+  <button id="btn-compute" onclick="compute()">⟳ &nbsp;Compute Intersection</button>
+
+  <div id="sidebar-footer">
+    <div class="legend-title">Legend</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-line" style="background:#00d4ff;opacity:0.7;height:1px;border:1px solid #00d4ff55;"></div>
+        Ellipsoid (wireframe)
+      </div>
+      <div class="legend-item">
+        <div class="legend-plane"></div>
+        Cutting plane
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background:#ff6b35;height:3px;"></div>
+        Intersection curve
+      </div>
+    </div>
+    <div class="controls-hint">
+      LEFT-DRAG · Rotate &nbsp;|&nbsp; SCROLL · Zoom<br>
+      RIGHT-DRAG · Pan &nbsp;|&nbsp; ENTER · Compute
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CANVAS ═══════════════════ -->
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="canvas-label">week11 · 7Y168806 · claude-sonnet-4-6</div>
+
+  <!-- Floating result panel -->
+  <div id="result-panel">
+    <div class="result-title" id="result-title"></div>
+    <div class="result-data"  id="result-data"></div>
+    <div class="eq-intersection" id="eq-intersection" style="display:none">
+      <div class="eq-intersection-title">Intersection Equation</div>
+      <div class="eq-intersection-formula" id="eq-intersection-formula"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── RENDERER / CAMERA / SCENE ──────────────────────────────
+const canvas   = document.getElementById('c');
+const wrap     = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x070b12, 1);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 500);
+const orbit  = { theta: Math.PI * 0.35, phi: Math.PI * 0.32, r: 16 };
+const target = new THREE.Vector3();
+
+function syncCamera() {
+  camera.position.set(
+    target.x + orbit.r * Math.sin(orbit.phi) * Math.sin(orbit.theta),
+    target.y + orbit.r * Math.cos(orbit.phi),
+    target.z + orbit.r * Math.sin(orbit.phi) * Math.cos(orbit.theta)
+  );
+  camera.lookAt(target);
+}
+syncCamera();
+
+// ── LIGHTS + STATIC HELPERS ────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const dl = new THREE.DirectionalLight(0x88ccff, 0.6);
+dl.position.set(6, 12, 8);
+scene.add(dl);
+
+const grid = new THREE.GridHelper(16, 16, 0x1e2d45, 0x1e2d45);
+grid.material.opacity = 0.5; grid.material.transparent = true;
+scene.add(grid);
+
+const makeAxis = (dir, color, len=5.5) => {
+  const g = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(), dir.clone().multiplyScalar(len)
+  ]);
+  return new THREE.Line(g, new THREE.LineBasicMaterial({ color, opacity:0.5, transparent:true }));
+};
+scene.add(makeAxis(new THREE.Vector3(1,0,0), 0xff4d6d));
+scene.add(makeAxis(new THREE.Vector3(0,1,0), 0x22d3a0));
+scene.add(makeAxis(new THREE.Vector3(0,0,1), 0x00d4ff));
+
+// ── ORBIT CONTROLS ─────────────────────────────────────────
+let drag=false, rDrag=false, prev={x:0,y:0};
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button===0) drag=true;
+  if (e.button===2) rDrag=true;
+  prev={x:e.clientX, y:e.clientY};
+});
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+window.addEventListener('mouseup', ()=>{drag=false;rDrag=false;});
+window.addEventListener('mousemove', e=>{
+  const dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+  if (drag) {
+    orbit.theta -= dx*0.009;
+    orbit.phi = Math.max(0.05, Math.min(Math.PI-0.05, orbit.phi+dy*0.009));
+    syncCamera();
+  }
+  if (rDrag) {
+    const right=new THREE.Vector3(), fwd=new THREE.Vector3();
+    camera.getWorldDirection(fwd);
+    right.crossVectors(fwd, new THREE.Vector3(0,1,0)).normalize();
+    target.addScaledVector(right,-dx*0.018);
+    target.y+=dy*0.018;
+    syncCamera();
+  }
+  prev={x:e.clientX,y:e.clientY};
+});
+canvas.addEventListener('wheel', e=>{
+  orbit.r=Math.max(2,Math.min(60,orbit.r+e.deltaY*0.025));
+  syncCamera(); e.preventDefault();
+},{passive:false});
+
+let touchPrev=null;
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length===1) touchPrev={x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+canvas.addEventListener('touchmove', e=>{
+  if(e.touches.length===1&&touchPrev){
+    const dx=e.touches[0].clientX-touchPrev.x, dy=e.touches[0].clientY-touchPrev.y;
+    orbit.theta-=dx*0.012;
+    orbit.phi=Math.max(0.05,Math.min(Math.PI-0.05,orbit.phi+dy*0.012));
+    syncCamera();
+    touchPrev={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  }
+  e.preventDefault();
+},{passive:false});
+
+// ── RESIZE ─────────────────────────────────────────────────
+function resize(){
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  renderer.setSize(w,h);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize);
+resize();
+
+// ── SCENE OBJECTS ──────────────────────────────────────────
+let objs=[];
+function clearManaged(){
+  objs.forEach(o=>{
+    scene.remove(o);
+    if(o.geometry) o.geometry.dispose();
+    if(o.material) o.material.dispose();
+  });
+  objs=[];
+}
+function addManaged(o){ scene.add(o); objs.push(o); return o; }
+
+// ── BUILD ELLIPSOID ────────────────────────────────────────
+function buildEllipsoid(a,b,c){
+  const geo=new THREE.SphereGeometry(1,48,32);
+  geo.applyMatrix4(new THREE.Matrix4().makeScale(a,b,c));
+  addManaged(new THREE.Mesh(geo.clone(), new THREE.MeshPhongMaterial({
+    color:0x00d4ff, transparent:true, opacity:0.04,
+    side:THREE.FrontSide, depthWrite:false
+  })));
+  addManaged(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    color:0x00d4ff, wireframe:true, transparent:true, opacity:0.20
+  })));
+}
+
+// ── BUILD PLANE ────────────────────────────────────────────
+function buildPlane(A,B,C,D,size){
+  const len2=A*A+B*B+C*C;
+  if(len2<1e-14) return;
+  const lenN=Math.sqrt(len2);
+  const nx=A/lenN, ny=B/lenN, nz=C/lenN;
+  const p0=new THREE.Vector3(A*D/len2, B*D/len2, C*D/len2);
+
+  let ux=1,uy=0,uz=0;
+  if(Math.abs(nx)>0.9){ux=0;uy=1;uz=0;}
+  const dot=ux*nx+uy*ny+uz*nz;
+  ux-=dot*nx; uy-=dot*ny; uz-=dot*nz;
+  const lu=Math.sqrt(ux*ux+uy*uy+uz*uz);
+  ux/=lu; uy/=lu; uz/=lu;
+  const vx=ny*uz-nz*uy, vy=nz*ux-nx*uz, vz=nx*uy-ny*ux;
+
+  const s=size;
+  const corners=[
+    new THREE.Vector3(p0.x-s*ux-s*vx, p0.y-s*uy-s*vy, p0.z-s*uz-s*vz),
+    new THREE.Vector3(p0.x+s*ux-s*vx, p0.y+s*uy-s*vy, p0.z+s*uz-s*vz),
+    new THREE.Vector3(p0.x+s*ux+s*vx, p0.y+s*uy+s*vy, p0.z+s*uz+s*vz),
+    new THREE.Vector3(p0.x-s*ux+s*vx, p0.y-s*uy+s*vy, p0.z-s*uz+s*vz),
+  ];
+  const verts=[
+    ...corners[0].toArray(),...corners[1].toArray(),...corners[2].toArray(),
+    ...corners[0].toArray(),...corners[2].toArray(),...corners[3].toArray(),
+  ];
+  const fgeo=new THREE.BufferGeometry();
+  fgeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  addManaged(new THREE.Mesh(fgeo, new THREE.MeshBasicMaterial({
+    color:0xa78bfa, transparent:true, opacity:0.07,
+    side:THREE.DoubleSide, depthWrite:false
+  })));
+  addManaged(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([...corners,corners[0]]),
+    new THREE.LineBasicMaterial({color:0xa78bfa, transparent:true, opacity:0.4})
+  ));
+  const nLen=Math.max(size*0.3,0.5);
+  addManaged(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([p0.clone(), p0.clone().addScaledVector(new THREE.Vector3(nx,ny,nz),nLen)]),
+    new THREE.LineBasicMaterial({color:0xa78bfa, transparent:true, opacity:0.5})
+  ));
+}
+
+// ── MATH: INTERSECTION ─────────────────────────────────────
+function computeIntersection(a,b,c,A,B,C,D){
+  const len2=A*A+B*B+C*C;
+  if(len2<1e-14) return {type:'degenerate'};
+  const lenN=Math.sqrt(len2);
+  const nx=A/lenN,ny=B/lenN,nz=C/lenN;
+  const p0x=A*D/len2, p0y=B*D/len2, p0z=C*D/len2;
+
+  let ux,uy,uz;
+  if(Math.abs(nx)<=Math.abs(ny)&&Math.abs(nx)<=Math.abs(nz)){ux=1;uy=0;uz=0;}
+  else if(Math.abs(ny)<=Math.abs(nz)){ux=0;uy=1;uz=0;}
+  else{ux=0;uy=0;uz=1;}
+  const dd=ux*nx+uy*ny+uz*nz;
+  ux-=dd*nx; uy-=dd*ny; uz-=dd*nz;
+  const lu=Math.sqrt(ux*ux+uy*uy+uz*uz);
+  ux/=lu;uy/=lu;uz/=lu;
+  const vx=ny*uz-nz*uy,vy=nz*ux-nx*uz,vz=nx*uy-ny*ux;
+
+  const Fx=ux/a,Fy=uy/b,Fz=uz/c;
+  const Gx=vx/a,Gy=vy/b,Gz=vz/c;
+  const Hx=p0x/a,Hy=p0y/b,Hz=p0z/c;
+
+  const Ass=Fx*Fx+Fy*Fy+Fz*Fz;
+  const Ast=Fx*Gx+Fy*Gy+Fz*Gz;
+  const Att=Gx*Gx+Gy*Gy+Gz*Gz;
+  const As=Fx*Hx+Fy*Hy+Fz*Hz;
+  const At=Gx*Hx+Gy*Hy+Gz*Hz;
+  const A0=Hx*Hx+Hy*Hy+Hz*Hz;
+
+  const det=Ass*Att-Ast*Ast;
+  if(Math.abs(det)<1e-14) return {type:'none'};
+
+  const s0=(-As*Att+At*Ast)/det;
+  const t0=(-At*Ass+As*Ast)/det;
+  const RHS=1-A0+As*s0+At*t0;
+  const EPS=1e-9;
+  if(RHS<-EPS) return {type:'none'};
+
+  const cx3=p0x+s0*ux+t0*vx;
+  const cy3=p0y+s0*uy+t0*vy;
+  const cz3=p0z+s0*uz+t0*vz;
+
+  if(Math.abs(RHS)<=EPS) return {type:'point',center3:[cx3,cy3,cz3]};
+
+  const tr=Ass+Att;
+  const disc=Math.sqrt(Math.max(0,0.25*(Ass-Att)**2+Ast*Ast));
+  const lam1=0.5*tr+disc, lam2=0.5*tr-disc;
+  if(lam1<EPS||lam2<EPS) return {type:'none'};
+
+  const r1=Math.sqrt(RHS/lam1), r2=Math.sqrt(RHS/lam2);
+
+  let e1s,e1t,e2s,e2t;
+  if(Math.abs(Ast)>1e-12){
+    e1s=lam1-Att; e1t=Ast;
+    const l1=Math.sqrt(e1s**2+e1t**2); e1s/=l1; e1t/=l1;
+    e2s=lam2-Att; e2t=Ast;
+    const l2=Math.sqrt(e2s**2+e2t**2); e2s/=l2; e2t/=l2;
+  } else {
+    if(Ass>=Att){e1s=1;e1t=0;e2s=0;e2t=1;}
+    else        {e1s=0;e1t=1;e2s=1;e2t=0;}
+  }
+
+  const N=256, pts=[];
+  for(let i=0;i<=N;i++){
+    const θ=2*Math.PI*i/N;
+    const cθ=Math.cos(θ),sθ=Math.sin(θ);
+    const s=s0+r1*cθ*e1s+r2*sθ*e2s;
+    const t=t0+r1*cθ*e1t+r2*sθ*e2t;
+    pts.push(new THREE.Vector3(p0x+s*ux+t*vx, p0y+s*uy+t*vy, p0z+s*uz+t*vz));
+  }
+
+  const axis1=new THREE.Vector3(e1s*ux+e1t*vx,e1s*uy+e1t*vy,e1s*uz+e1t*vz).normalize();
+  const axis2=new THREE.Vector3(e2s*ux+e2t*vx,e2s*uy+e2t*vy,e2s*uz+e2t*vz).normalize();
+
+  return {type:'ellipse', points:pts, r1, r2, center3:[cx3,cy3,cz3], axis1, axis2};
+}
+
+// ── BUILD INTERSECTION VISUAL ──────────────────────────────
+function buildIntersection(res){
+  if(res.type==='ellipse'){
+    const geo=new THREE.BufferGeometry().setFromPoints(res.points);
+    addManaged(new THREE.Line(geo.clone(), new THREE.LineBasicMaterial({color:0xff6b35,linewidth:2})));
+    addManaged(new THREE.Line(geo, new THREE.LineBasicMaterial({color:0xff8c5a,transparent:true,opacity:0.25,linewidth:6})));
+    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.06,12,12),new THREE.MeshBasicMaterial({color:0xff6b35}));
+    dot.position.set(...res.center3); addManaged(dot);
+    const c=new THREE.Vector3(...res.center3);
+    [[res.axis1,res.r1,0xff6b35],[res.axis2,res.r2,0xffa080]].forEach(([ax,len,col])=>{
+      addManaged(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([c.clone(),c.clone().addScaledVector(ax,len)]),
+        new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.6})
+      ));
+    });
+  } else if(res.type==='point'){
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.09,16,16),new THREE.MeshBasicMaterial({color:0xfbbf24}));
+    m.position.set(...res.center3); addManaged(m);
+  }
+}
+
+// ── RESULT PANEL ───────────────────────────────────────────
+const fmt=(v,d=4)=>v.toFixed(d);
+
+function showResult(res,params){
+  const panel=document.getElementById('result-panel');
+  const title=document.getElementById('result-title');
+  const data =document.getElementById('result-data');
+  const eqSec=document.getElementById('eq-intersection');
+  const eqFrm=document.getElementById('eq-intersection-formula');
+  panel.style.display='block';
+  panel.className='';
+  eqSec.style.display='none';
+
+  const {a,b,c,A,B,C,D}=params;
+
+  if(res.type==='ellipse'){
+    panel.classList.add('ellipse');
+    title.textContent='✓  Intersection: Ellipse';
+    const [cx,cy,cz]=res.center3;
+    data.innerHTML=
+      `Semi-axis r₁: <span>${fmt(res.r1)}</span> &nbsp;|&nbsp; r₂: <span>${fmt(res.r2)}</span><br>`+
+      `Center: <span>(${fmt(cx,3)}, ${fmt(cy,3)}, ${fmt(cz,3)})</span>`;
+
+    eqSec.style.display='block';
+    const fv=(v)=>`(${fmt(v.x,3)},${fmt(v.y,3)},${fmt(v.z,3)})`;
+    eqFrm.innerHTML=
+      `<span style="color:var(--muted)">System:</span><br>`+
+      `x²/${fmt(a*a,3)} + y²/${fmt(b*b,3)} + z²/${fmt(c*c,3)} = 1<br>`+
+      `${fmt(A,3)}x + ${fmt(B,3)}y + ${fmt(C,3)}z = ${fmt(D,3)}<br><br>`+
+      `<span style="color:var(--muted)">Parametric (θ∈[0,2π]):</span><br>`+
+      `<span class="hi">P(θ)</span> = C + r₁cos(θ)ê₁ + r₂sin(θ)ê₂<br>`+
+      `C=${fv(new THREE.Vector3(...res.center3))}<br>`+
+      `r₁=<span class="hi">${fmt(res.r1)}</span>  ê₁=${fv(res.axis1)}<br>`+
+      `r₂=<span class="hi">${fmt(res.r2)}</span>  ê₂=${fv(res.axis2)}`;
+
+  } else if(res.type==='point'){
+    panel.classList.add('point');
+    title.textContent='⚠  Intersection: Single Point (Tangent)';
+    const [cx,cy,cz]=res.center3;
+    data.innerHTML=`Point: <span>(${fmt(cx,4)}, ${fmt(cy,4)}, ${fmt(cz,4)})</span>`;
+    eqSec.style.display='block';
+    eqFrm.innerHTML=
+      `x²/${fmt(a*a,3)} + y²/${fmt(b*b,3)} + z²/${fmt(c*c,3)} = 1<br>`+
+      `${fmt(A,3)}x + ${fmt(B,3)}y + ${fmt(C,3)}z = ${fmt(D,3)}<br>`+
+      `<span style="color:var(--yellow)">Plane tangent to ellipsoid.</span>`;
+
+  } else if(res.type==='degenerate'){
+    panel.classList.add('none');
+    title.textContent='✗  Invalid plane (A=B=C=0)';
+    data.innerHTML='Set at least one non-zero coefficient.';
+
+  } else {
+    panel.classList.add('none');
+    title.textContent='✗  No Intersection';
+    data.innerHTML='The plane does not cut the ellipsoid.';
+    eqSec.style.display='block';
+    eqFrm.innerHTML=
+      `x²/${fmt(a*a,3)} + y²/${fmt(b*b,3)} + z²/${fmt(c*c,3)} = 1<br>`+
+      `${fmt(A,3)}x + ${fmt(B,3)}y + ${fmt(C,3)}z = ${fmt(D,3)}<br>`+
+      `<span style="color:var(--red)">No real solution.</span>`;
+  }
+}
+
+// ── EXPRESSION EVALUATOR ──────────────────────────────────
+function evalExpr(raw) {
+  if (raw === null || raw === undefined) return NaN;
+  let str = String(raw).trim()
+    .replace(/\s+/g, '')
+    .replace(/×/g, '*').replace(/÷/g, '/')
+    .replace(/²/g, '^2').replace(/³/g, '^3');
+  if (!str) return NaN;
+
+  let pos = 0;
+
+  function parseExpr() {
+    let left = parseTerm();
+    while (pos < str.length && (str[pos] === '+' || str[pos] === '-')) {
+      const op = str[pos++];
+      left = op === '+' ? left + parseTerm() : left - parseTerm();
+    }
+    return left;
+  }
+  function parseTerm() {
+    let left = parsePow();
+    while (pos < str.length && (str[pos] === '*' || str[pos] === '/')) {
+      const op = str[pos++];
+      const right = parsePow();
+      left = op === '*' ? left * right : left / right;
+    }
+    return left;
+  }
+  function parsePow() {
+    let base = parseUnary();
+    if (pos < str.length && str[pos] === '^') {
+      pos++;
+      const exp = parseUnary();
+      base = Math.pow(base, exp);
+    }
+    return base;
+  }
+  function parseUnary() {
+    if (pos < str.length && str[pos] === '-') { pos++; return -parsePrimary(); }
+    if (pos < str.length && str[pos] === '+') { pos++; return parsePrimary(); }
+    return parsePrimary();
+  }
+  function parsePrimary() {
+    if (pos < str.length && str[pos] === '(') {
+      pos++;
+      const val = parseExpr();
+      if (pos < str.length && str[pos] === ')') pos++;
+      return val;
+    }
+    const start = pos;
+    while (pos < str.length &&
+      (str[pos] >= '0' && str[pos] <= '9' || str[pos] === '.')) pos++;
+    if (pos === start) return NaN;
+    return parseFloat(str.slice(start, pos));
+  }
+
+  try {
+    const result = parseExpr();
+    if (pos !== str.length) return NaN;
+    return result;
+  } catch(e) { return NaN; }
+}
+
+// ── ELLIPSOID INPUT MODE (axis vs squared) ─────────────────
+let ellipsoidMode = 'axis'; // 'axis' | 'sq'
+
+function setEllipsoidMode(mode) {
+  ellipsoidMode = mode;
+  document.getElementById('mode-btn-axis').classList.toggle('active', mode === 'axis');
+  document.getElementById('mode-btn-sq').classList.toggle('active', mode === 'sq');
+  if (mode === 'axis') {
+    document.getElementById('label-ea').textContent = 'a (x-axis)';
+    document.getElementById('label-eb').textContent = 'b (y-axis)';
+    document.getElementById('label-ec').textContent = 'c (z-axis)';
+    document.getElementById('ea').placeholder = 'e.g. 3';
+    document.getElementById('eb').placeholder = 'e.g. 2';
+    document.getElementById('ec').placeholder = 'e.g. 3/2';
+  } else {
+    document.getElementById('label-ea').textContent = 'a² (x²)';
+    document.getElementById('label-eb').textContent = 'b² (y²)';
+    document.getElementById('label-ec').textContent = 'c² (z²)';
+    document.getElementById('ea').placeholder = 'e.g. 9';
+    document.getElementById('eb').placeholder = 'e.g. 4';
+    document.getElementById('ec').placeholder = 'e.g. 9/4';
+  }
+  updateFormulaDisplay();
+}
+
+// ── EVALUATED VALUE HELPERS ────────────────────────────────
+function getEllipsoidAxes() {
+  const ra = evalExpr(document.getElementById('ea').value);
+  const rb = evalExpr(document.getElementById('eb').value);
+  const rc = evalExpr(document.getElementById('ec').value);
+  if (ellipsoidMode === 'sq') {
+    return { a: Math.sqrt(ra), b: Math.sqrt(rb), c: Math.sqrt(rc),
+             a2: ra, b2: rb, c2: rc };
+  }
+  return { a: ra, b: rb, c: rc, a2: ra*ra, b2: rb*rb, c2: rc*rc };
+}
+
+function showHint(id, val, isOk) {
+  const el = document.getElementById('hint-' + id);
+  const inp = document.getElementById(id);
+  if (!el) return;
+  if (isOk) {
+    el.textContent = '= ' + (+val.toFixed(6));
+    el.className = 'eval-hint';
+    inp.classList.remove('eval-err'); inp.classList.add('eval-ok');
+  } else {
+    el.textContent = '✗ invalid';
+    el.className = 'eval-hint err';
+    inp.classList.remove('eval-ok'); inp.classList.add('eval-err');
+  }
+}
+
+function refreshHints() {
+  const {a, b, c} = getEllipsoidAxes();
+  const rawA = evalExpr(document.getElementById('ea').value);
+  const rawB = evalExpr(document.getElementById('eb').value);
+  const rawC = evalExpr(document.getElementById('ec').value);
+  if (ellipsoidMode === 'sq') {
+    showHint('ea', rawA, !isNaN(rawA) && rawA > 0);
+    showHint('eb', rawB, !isNaN(rawB) && rawB > 0);
+    showHint('ec', rawC, !isNaN(rawC) && rawC > 0);
+  } else {
+    showHint('ea', rawA, !isNaN(rawA) && rawA > 0);
+    showHint('eb', rawB, !isNaN(rawB) && rawB > 0);
+    showHint('ec', rawC, !isNaN(rawC) && rawC > 0);
+  }
+  ['pA','pB','pC','pD'].forEach(id => {
+    const v = evalExpr(document.getElementById(id).value);
+    showHint(id, v, !isNaN(v));
+  });
+}
+
+// ── LIVE FORMULA DISPLAY ───────────────────────────────────
+function updateFormulaDisplay(){
+  refreshHints();
+  const {a, b, c, a2, b2, c2} = getEllipsoidAxes();
+  if(a&&b&&c&&!isNaN(a)&&!isNaN(b)&&!isNaN(c))
+    document.getElementById('ellipsoid-formula').textContent=
+      `x²/${a2.toFixed(3)} + y²/${b2.toFixed(3)} + z²/${c2.toFixed(3)} = 1`;
+
+  const A=evalExpr(document.getElementById('pA').value)||0;
+  const B=evalExpr(document.getElementById('pB').value)||0;
+  const C=evalExpr(document.getElementById('pC').value)||0;
+  const D=evalExpr(document.getElementById('pD').value)||0;
+  const fmtC=(v,isFirst)=>{
+    if(v===0) return null;
+    const s=v<0?'-':isFirst?'':'+';
+    const n=Math.abs(v)===1?'':Math.abs(v).toFixed(4).replace(/\.?0+$/,'');
+    return `${s}${n}`;
+  };
+  const parts=[];
+  ['x','y','z'].forEach((v,i)=>{
+    const coef=[A,B,C][i];
+    if(coef!==0) parts.push(`${fmtC(coef,parts.length===0)}${v}`);
+  });
+  document.getElementById('plane-formula').textContent=
+    `${parts.join(' ')||'0'} = ${D}`;
+}
+
+// ── MAIN COMPUTE ───────────────────────────────────────────
+function compute(skipSync){
+  const {a: _a, b: _b, c: _c} = getEllipsoidAxes();
+  const a=Math.max(1e-4, isNaN(_a)?1:_a);
+  const b=Math.max(1e-4, isNaN(_b)?1:_b);
+  const c=Math.max(1e-4, isNaN(_c)?1:_c);
+  const A=evalExpr(document.getElementById('pA').value)||0;
+  const B=evalExpr(document.getElementById('pB').value)||0;
+  const C=evalExpr(document.getElementById('pC').value)||0;
+  const D=evalExpr(document.getElementById('pD').value)||0;
+
+  if(!skipSync) syncSliderFromD(D);
+  updateFormulaDisplay();
+
+  clearManaged();
+  buildEllipsoid(a,b,c);
+  buildPlane(A,B,C,D, Math.max(a,b,c)*2.2);
+
+  const res=computeIntersection(a,b,c,A,B,C,D);
+  buildIntersection(res);
+  showResult(res,{a,b,c,A,B,C,D});
+
+  orbit.r=Math.max(orbit.r, Math.max(a,b,c)*4.5);
+  syncCamera();
+}
+
+// ── D SLIDER ──────────────────────────────────────────────
+function syncSliderFromD(D){
+  const sl=document.getElementById('plane-d-slider');
+  sl.min=D-15; sl.max=D+15; sl.value=D;
+  document.getElementById('slider-d-val').textContent=parseFloat(D).toFixed(2);
+  document.getElementById('slider-min-label').textContent=(D-15).toFixed(0);
+  document.getElementById('slider-max-label').textContent='+'+(D+15).toFixed(0);
+}
+
+document.getElementById('plane-d-slider').addEventListener('input',function(){
+  const D=parseFloat(this.value);
+  document.getElementById('pD').value=D.toFixed(2);
+  document.getElementById('slider-d-val').textContent=D.toFixed(2);
+  compute(true); // true = skip range reset
+});
+
+document.getElementById('pD').addEventListener('change',function(){
+  const D=evalExpr(this.value);
+  if(!isNaN(D)) syncSliderFromD(D);
+});
+
+// ── ENTER KEY ──────────────────────────────────────────────
+const numIds=['ea','eb','ec','pA','pB','pC','pD'];
+function allFilled(){ return numIds.every(id=>{
+  const v=evalExpr(document.getElementById(id).value);
+  return !isNaN(v);
+}); }
+
+numIds.forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('keydown',e=>{ if(e.key==='Enter'&&allFilled()) compute(); });
+  el.addEventListener('input', updateFormulaDisplay);
+});
+
+// ── EQUATION PARSERS ───────────────────────────────────────
+function parseEllipsoidEq(str){
+  str=str.replace(/²/g,'^2').replace(/\s+/g,'').toLowerCase();
+
+  // Extract a² for each variable from expressions like:
+  //   x^2        → coeff=1, denom=1  → a²=1
+  //   x^2/9      → coeff=1, denom=9  → a²=9
+  //   4*z^2      → coeff=4, denom=1  → c²=0.25
+  //   (1/4)*z^2  → coeff=0.25        → c²=4  (handled via evalExpr)
+  function extractA2(s, v) {
+    // Optional [sign]coeff* before VAR^2, optional /denom after
+    const re = new RegExp(
+      '([+\\-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\*)?' +
+      v + '\\^2' +
+      '(?:\\/(\\d+(?:\\.\\d*)?))?'
+    );
+    const m = s.match(re);
+    if (!m) return null;
+    let coeff = 1;
+    if (m[1]) {
+      const cs = m[1].replace('*', '');
+      coeff = evalExpr(cs);
+      if (isNaN(coeff) || coeff <= 0) return null;
+    }
+    const denom = m[2] ? evalExpr(m[2]) : 1;
+    if (isNaN(denom) || denom <= 0) return null;
+    return denom / coeff;
+  }
+
+  const a2=extractA2(str,'x'), b2=extractA2(str,'y'), c2=extractA2(str,'z');
+  if(a2!==null&&b2!==null&&c2!==null&&a2>0&&b2>0&&c2>0)
+    return {a:Math.sqrt(a2),b:Math.sqrt(b2),c:Math.sqrt(c2)};
+
+  // (x/a)^2 form
+  const bx=str.match(/\(x\/([0-9.]+)\)\^2/);
+  const by=str.match(/\(y\/([0-9.]+)\)\^2/);
+  const bz=str.match(/\(z\/([0-9.]+)\)\^2/);
+  if(bx&&by&&bz) return {a:+bx[1],b:+by[1],c:+bz[1]};
+  return null;
+}
+
+function parsePlaneEq(str){
+  str=str.replace(/\s+/g,'').toLowerCase();
+  const eqIdx=str.indexOf('=');
+  if(eqIdx===-1) return null;
+  const D=evalExpr(str.slice(eqIdx+1));
+  if(isNaN(D)) return null;
+  const expr=(str[0]!=='-'?'+':'')+str.slice(0,eqIdx);
+  const getCoeff=v=>{
+    const m=expr.match(new RegExp('([+\\-][0-9]*\\.?[0-9]*)'+v));
+    if(!m) return 0;
+    const s=m[1];
+    if(s==='+'||s==='') return 1;
+    if(s==='-') return -1;
+    const n=evalExpr(s);
+    return isNaN(n)?(s[0]==='-'?-1:1):n;
+  };
+  return {A:getCoeff('x'),B:getCoeff('y'),C:getCoeff('z'),D};
+}
+
+function flashError(el){
+  el.classList.add('parse-error');
+  setTimeout(()=>el.classList.remove('parse-error'),800);
+}
+
+function parseEllipsoidInput(){
+  const inp=document.getElementById('eq-ellipsoid');
+  const res=parseEllipsoidEq(inp.value);
+  if(!res){flashError(inp);return;}
+  if(ellipsoidMode==='sq'){
+    document.getElementById('ea').value=(res.a*res.a).toFixed(4);
+    document.getElementById('eb').value=(res.b*res.b).toFixed(4);
+    document.getElementById('ec').value=(res.c*res.c).toFixed(4);
+  } else {
+    document.getElementById('ea').value=res.a.toFixed(4);
+    document.getElementById('eb').value=res.b.toFixed(4);
+    document.getElementById('ec').value=res.c.toFixed(4);
+  }
+  updateFormulaDisplay();
+  if(allFilled()) compute();
+}
+
+function parsePlaneInput(){
+  const inp=document.getElementById('eq-plane');
+  const res=parsePlaneEq(inp.value);
+  if(!res){flashError(inp);return;}
+  document.getElementById('pA').value=res.A;
+  document.getElementById('pB').value=res.B;
+  document.getElementById('pC').value=res.C;
+  document.getElementById('pD').value=res.D;
+  updateFormulaDisplay();
+  if(allFilled()) compute();
+}
+
+document.getElementById('eq-ellipsoid').addEventListener('keydown',e=>{if(e.key==='Enter') parseEllipsoidInput();});
+document.getElementById('eq-plane').addEventListener('keydown',   e=>{if(e.key==='Enter') parsePlaneInput();});
+
+// ── RENDER LOOP ────────────────────────────────────────────
+(function animate(){
+  requestAnimationFrame(animate);
+  renderer.render(scene,camera);
+})();
+
+// ── INIT ───────────────────────────────────────────────────
+compute();
+</script>
+</body>
+</html>

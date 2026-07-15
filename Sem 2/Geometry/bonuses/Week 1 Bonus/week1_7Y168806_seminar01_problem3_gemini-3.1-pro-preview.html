@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Vector Triangle Visualizer</title>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #818CF8;
+            --bg-color: #111827;
+            --card-bg: #1F2937;
+            --text-main: #F9FAFB;
+            --text-muted: #9CA3AF;
+            --border-color: #374151;
+            --success-bg: #064E3B;
+            --success-text: #34D399;
+            --success-border: #047857;
+            --error-bg: #7F1D1D;
+            --error-text: #F87171;
+            --error-border: #B91C1C;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.025em;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            max-width: 1000px;
+            width: 100%;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 320px;
+            flex-shrink: 0;
+        }
+        .vector-input {
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            background-color: #374151;
+            transition: border-color 0.2s;
+        }
+        .vector-input:hover {
+            border-color: #6B7280;
+        }
+        .vector-input h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .vector-input h3 .color-box {
+            display: inline-block;
+            margin-top: 0;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+        .input-group label {
+            width: 20px;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            font-family: monospace;
+            background-color: #1F2937;
+            color: var(--text-main);
+        }
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .canvas-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        canvas {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #1F2937;
+            cursor: grab;
+            width: 100%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+        .result {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-align: center;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .success {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+        .error {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+        }
+        .info {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            line-height: 1.5;
+            background: #374151;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-main);
+        }
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+        button {
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .controls {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>3D Vector Triangle Visualizer</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <div class="vector-input" id="v1-container">
+                <h3 style="color: #EF4444;">Vector 1 (v1)</h3>
+                <div class="input-group"><label>X:</label><input type="number" id="v1x" value="3" step="any"></div>
+                <div class="input-group"><label>Y:</label><input type="number" id="v1y" value="0" step="any"></div>
+                <div class="input-group"><label>Z:</label><input type="number" id="v1z" value="0" step="any"></div>
+            </div>
+            <div class="vector-input" id="v2-container">
+                <h3 style="color: #3B82F6;">Vector 2 (v2)</h3>
+                <div class="input-group"><label>X:</label><input type="number" id="v2x" value="0" step="any"></div>
+                <div class="input-group"><label>Y:</label><input type="number" id="v2y" value="4" step="any"></div>
+                <div class="input-group"><label>Z:</label><input type="number" id="v2z" value="0" step="any"></div>
+            </div>
+            <div class="vector-input" id="v3-container">
+                <h3 style="color: #10B981;">Vector 3 (v3)</h3>
+                <div class="input-group"><label>X:</label><input type="number" id="v3x" value="-3" step="any"></div>
+                <div class="input-group"><label>Y:</label><input type="number" id="v3y" value="-4" step="any"></div>
+                <div class="input-group"><label>Z:</label><input type="number" id="v3z" value="0" step="any"></div>
+            </div>
+            <button onclick="checkTriangle()">Check & Draw</button>
+            <div id="result-message" class="result"></div>
+            <div class="info">
+                * You can drag the ends of the vectors in the canvas to change their X and Y components.
+                <br>* Mouse wheel to zoom, click and drag background to rotate view.
+            </div>
+        </div>
+        
+        <div>
+            <canvas id="canvas" width="600" height="600"></canvas>
+            <div class="legend">
+                <div class="legend-item"><div class="color-box" style="background: red;"></div>v1</div>
+                <div class="legend-item"><div class="color-box" style="background: blue;"></div>v2</div>
+                <div class="legend-item"><div class="color-box" style="background: green;"></div>v3</div>
+                <div class="legend-item"><div class="color-box" style="background: gray;"></div>Axes</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Viewport settings
+    let scale = 30; // pixels per unit
+    let cameraAngleX = Math.PI / 6;
+    let cameraAngleY = -Math.PI / 4;
+    
+    // Interaction states
+    let isDraggingBackground = false;
+    let isDraggingVector = -1; // -1: none, 0: v1, 1: v2, 2: v3
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    let vectors = [
+        {x: 3, y: 0, z: 0, color: '#EF4444'},
+        {x: 0, y: 4, z: 0, color: '#3B82F6'},
+        {x: -3, y: -4, z: 0, color: '#10B981'}
+    ];
+    
+    let arrangement = null; // Stores how vectors form a triangle
+
+    function getInputs() {
+        vectors[0].x = parseFloat(document.getElementById('v1x').value) || 0;
+        vectors[0].y = parseFloat(document.getElementById('v1y').value) || 0;
+        vectors[0].z = parseFloat(document.getElementById('v1z').value) || 0;
+        
+        vectors[1].x = parseFloat(document.getElementById('v2x').value) || 0;
+        vectors[1].y = parseFloat(document.getElementById('v2y').value) || 0;
+        vectors[1].z = parseFloat(document.getElementById('v2z').value) || 0;
+        
+        vectors[2].x = parseFloat(document.getElementById('v3x').value) || 0;
+        vectors[2].y = parseFloat(document.getElementById('v3y').value) || 0;
+        vectors[2].z = parseFloat(document.getElementById('v3z').value) || 0;
+    }
+
+    function updateInputs() {
+        document.getElementById('v1x').value = vectors[0].x.toFixed(2);
+        document.getElementById('v1y').value = vectors[0].y.toFixed(2);
+        document.getElementById('v1z').value = vectors[0].z.toFixed(2);
+        
+        document.getElementById('v2x').value = vectors[1].x.toFixed(2);
+        document.getElementById('v2y').value = vectors[1].y.toFixed(2);
+        document.getElementById('v2z').value = vectors[1].z.toFixed(2);
+        
+        document.getElementById('v3x').value = vectors[2].x.toFixed(2);
+        document.getElementById('v3y').value = vectors[2].y.toFixed(2);
+        document.getElementById('v3z').value = vectors[2].z.toFixed(2);
+    }
+
+    // 3D to 2D Projection
+    function project(x, y, z) {
+        // Rotate around Y axis
+        let cosY = Math.cos(cameraAngleY);
+        let sinY = Math.sin(cameraAngleY);
+        let x1 = x * cosY - z * sinY;
+        let z1 = x * sinY + z * cosY;
+
+        // Rotate around X axis
+        let cosX = Math.cos(cameraAngleX);
+        let sinX = Math.sin(cameraAngleX);
+        let y1 = y * cosX - z1 * sinX;
+        let z2 = y * sinX + z1 * cosX;
+
+        // Note: Y axis in canvas is down, but typically in math Y is up. We invert Y.
+        return {
+            x: x1 * scale + canvas.width / 2,
+            y: -y1 * scale + canvas.height / 2,
+            z: z2 // for depth sorting if needed
+        };
+    }
+
+    // Inverse projection to update X/Y from 2D canvas mouse coords (assuming Z stays same)
+    function unprojectUpdateXY(mouseX, mouseY, originalZ) {
+        let cx = mouseX - canvas.width / 2;
+        let cy = -(mouseY - canvas.height / 2);
+        
+        let x1 = cx / scale;
+        let y1 = cy / scale;
+        
+        let cosX = Math.cos(cameraAngleX);
+        let sinX = Math.sin(cameraAngleX);
+        let cosY = Math.cos(cameraAngleY);
+        let sinY = Math.sin(cameraAngleY);
+        
+        // y1 = y * cosX - z1 * sinX
+        // z2 = y * sinX + z1 * cosX
+        // x1 = x * cosY - z * sinY
+        // z1 = x * sinY + z * cosY
+        
+        // This is complex to invert simply if we keep Z constant. 
+        // For simple dragging, we will move the vector in the viewing plane.
+        // Let's implement a simpler approach: calculate view-plane vectors and add.
+        
+        return null; // Not strictly trivial without matrix inversion, let's use a simpler drag approach
+    }
+
+    function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+        const headlen = 10; // length of head in pixels
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const angle = Math.atan2(dy, dx);
+        
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toX, toY);
+        ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw axes
+        let origin = project(0, 0, 0);
+        let xAxis = project(10, 0, 0);
+        let yAxis = project(0, 10, 0);
+        let zAxis = project(0, 0, 10);
+        
+        drawArrow(ctx, origin.x, origin.y, xAxis.x, xAxis.y, '#999');
+        ctx.fillStyle = '#999'; ctx.fillText("X", xAxis.x + 5, xAxis.y);
+        
+        drawArrow(ctx, origin.x, origin.y, yAxis.x, yAxis.y, '#999');
+        ctx.fillText("Y", yAxis.x + 5, yAxis.y);
+        
+        drawArrow(ctx, origin.x, origin.y, zAxis.x, zAxis.y, '#999');
+        ctx.fillText("Z", zAxis.x + 5, zAxis.y);
+
+        // If they form a triangle, draw the arranged triangle
+        if (arrangement) {
+            // Draw original vectors lightly at origin
+            vectors.forEach((v, i) => {
+                let end = project(v.x, v.y, v.z);
+                ctx.globalAlpha = 0.3;
+                drawArrow(ctx, origin.x, origin.y, end.x, end.y, v.color);
+                ctx.globalAlpha = 1.0;
+                
+                // Draw hitboxes for dragging
+                ctx.beginPath();
+                ctx.arc(end.x, end.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = v.color;
+                ctx.fill();
+            });
+
+            // Draw triangle path
+            let currentPt = {x: 0, y: 0, z: 0};
+            
+            // Reorder rendering based on arrangement
+            // arrangement holds signs: [s1, s2, s3] where s1*v1 + s2*v2 + s3*v3 = 0
+            // We want to draw s1*v1, then s2*v2 starting from end of s1*v1, etc.
+            
+            let pts = [currentPt];
+            for(let i=0; i<3; i++) {
+                let sign = arrangement[i];
+                let v = vectors[i];
+                let nextPt = {
+                    x: currentPt.x + sign * v.x,
+                    y: currentPt.y + sign * v.y,
+                    z: currentPt.z + sign * v.z
+                };
+                
+                let pStart = project(currentPt.x, currentPt.y, currentPt.z);
+                let pEnd = project(nextPt.x, nextPt.y, nextPt.z);
+                
+                drawArrow(ctx, pStart.x, pStart.y, pEnd.x, pEnd.y, v.color);
+                
+                // Draw label
+                let midX = (pStart.x + pEnd.x) / 2;
+                let midY = (pStart.y + pEnd.y) / 2;
+                ctx.fillStyle = v.color;
+                ctx.font = "14px Arial";
+                ctx.fillText((sign < 0 ? "-" : "") + "v" + (i+1), midX + 10, midY);
+                
+                currentPt = nextPt;
+            }
+            
+        } else {
+            // Just draw vectors from origin
+            vectors.forEach((v, i) => {
+                let end = project(v.x, v.y, v.z);
+                drawArrow(ctx, origin.x, origin.y, end.x, end.y, v.color);
+                
+                ctx.fillStyle = v.color;
+                ctx.font = "14px Arial";
+                ctx.fillText("v" + (i+1), end.x + 10, end.y);
+                
+                // Draw hitboxes for dragging
+                ctx.beginPath();
+                ctx.arc(end.x, end.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = v.color;
+                ctx.fill();
+            });
+        }
+    }
+
+    function checkTriangle() {
+        getInputs();
+        let v1 = vectors[0], v2 = vectors[1], v3 = vectors[2];
+        const eps = 1e-6;
+        
+        arrangement = null;
+        let signs = [1, -1];
+        
+        for(let s1 of signs) {
+            for(let s2 of signs) {
+                for(let s3 of signs) {
+                    let sumX = s1*v1.x + s2*v2.x + s3*v3.x;
+                    let sumY = s1*v1.y + s2*v2.y + s3*v3.y;
+                    let sumZ = s1*v1.z + s2*v2.z + s3*v3.z;
+                    
+                    if (Math.abs(sumX) < eps && Math.abs(sumY) < eps && Math.abs(sumZ) < eps) {
+                        arrangement = [s1, s2, s3];
+                        break;
+                    }
+                }
+                if (arrangement) break;
+            }
+            if (arrangement) break;
+        }
+
+        const msgDiv = document.getElementById('result-message');
+        if (arrangement) {
+            msgDiv.className = 'result success';
+            let str = arrangement.map((s, i) => (s < 0 ? "-" : "+") + "v" + (i+1)).join(" ");
+            if (str.startsWith("+")) str = str.substring(1);
+            msgDiv.innerHTML = `Success! The vectors can form a triangle.<br>Relation: ${str} = 0`;
+        } else {
+            msgDiv.className = 'result error';
+            msgDiv.innerHTML = "Cannot form a closed triangle with these vectors.";
+        }
+        
+        render();
+    }
+
+    // Interaction handling
+    canvas.addEventListener('mousedown', (e) => {
+        let rect = canvas.getBoundingClientRect();
+        let mx = e.clientX - rect.left;
+        let my = e.clientY - rect.top;
+        
+        lastMouseX = mx;
+        lastMouseY = my;
+        
+        // Check if clicked on a vector tip
+        isDraggingVector = -1;
+        for (let i = 0; i < vectors.length; i++) {
+            let v = vectors[i];
+            let proj = project(v.x, v.y, v.z);
+            let dx = mx - proj.x;
+            let dy = my - proj.y;
+            if (dx*dx + dy*dy < 100) { // 10px radius
+                isDraggingVector = i;
+                return;
+            }
+        }
+        
+        isDraggingBackground = true;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        let rect = canvas.getBoundingClientRect();
+        let mx = e.clientX - rect.left;
+        let my = e.clientY - rect.top;
+        
+        let dx = mx - lastMouseX;
+        let dy = my - lastMouseY;
+        
+        if (isDraggingBackground) {
+            cameraAngleY += dx * 0.01;
+            cameraAngleX += dy * 0.01;
+            render();
+        } else if (isDraggingVector !== -1) {
+            // Complex to properly map 2D drag to 3D. We will adjust X and Y based on screen axes.
+            // This is a simplification:
+            let cosY = Math.cos(cameraAngleY);
+            let sinY = Math.sin(cameraAngleY);
+            let cosX = Math.cos(cameraAngleX);
+            let sinX = Math.sin(cameraAngleX);
+            
+            // Adjust vector in 3D
+            let v = vectors[isDraggingVector];
+            
+            // Inverse mapping approximation for dragging
+            let dz_screen = 0; // We keep depth constant
+            let dWorldX = (dx / scale) * cosY;
+            let dWorldY = -(dy / scale) * cosX;
+            let dWorldZ = (dx / scale) * sinY - (dy / scale) * sinX;
+            
+            v.x += dWorldX;
+            v.y += dWorldY;
+            v.z += dWorldZ; // Optional: can keep z constant if preferred
+            
+            updateInputs();
+            checkTriangle(); // Auto check
+        }
+        
+        lastMouseX = mx;
+        lastMouseY = my;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDraggingBackground = false;
+        isDraggingVector = -1;
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+        isDraggingBackground = false;
+        isDraggingVector = -1;
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        scale *= (e.deltaY < 0) ? 1.1 : 0.9;
+        scale = Math.max(5, Math.min(100, scale));
+        render();
+    });
+
+    // Initial render
+    document.getElementById('v1x').addEventListener('input', checkTriangle);
+    document.getElementById('v1y').addEventListener('input', checkTriangle);
+    document.getElementById('v1z').addEventListener('input', checkTriangle);
+    document.getElementById('v2x').addEventListener('input', checkTriangle);
+    document.getElementById('v2y').addEventListener('input', checkTriangle);
+    document.getElementById('v2z').addEventListener('input', checkTriangle);
+    document.getElementById('v3x').addEventListener('input', checkTriangle);
+    document.getElementById('v3y').addEventListener('input', checkTriangle);
+    document.getElementById('v3z').addEventListener('input', checkTriangle);
+    
+    checkTriangle();
+
+</script>
+
+</body>
+</html>

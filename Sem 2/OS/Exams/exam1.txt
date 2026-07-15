@@ -1,0 +1,198 @@
+1.RO: Dati o expresie regulara care accepta stringuri formatate ca titluri: secventa de cuvinte separate prin spatii, fiecare cuvant avand prima litera mare.
+EN: Give a regular expression that accepts strings formatted as titles: sequence of words separated by spaces, each word being capitalized.
+
+2.RO: Se consideră un fișier text care conține pe fiecare linie cuvinte (secvențe nevide
+de litere mari sau mici) separate prin SPAȚII. Scrieți patru comenzi GREP care afișează
+liniile are conţin cuvinte care încep cu o vocală mare sau mică.
+EN: Consider a text file that contains words (non-empty sequences of uppercase or
+lowercase letters) separated by SPACES on each line. Write four GREP commands that
+display lines that contain words that begin with an uppercase or lowercase vowel.
+
+3.RO: Se consideră un fișier text care conține pe fiecare linie secvențe nevide de litere
+și/sau cifre separate prin SPAȚII. Scrieți două comenzi SED care afișează liniile care
+nu conțin nicio cifră din acest fișier.
+EN: Consider a text file that contains on each line non-empty sequences of letters
+and/or digits separated by SPACES. Write two SED commands that display the lines that
+do not contain any digits in this file.
+
+4.RO: Scrieţi o comandă AWK care afişează suma ultimelor doua câmpuri din fiecare linie cu mai mult de 5 câmpuri, considerand ca ultimele doua câmpuri sunt numerice.
+EN: Write an AWK command that displays the sum of the last two fields urom each linei having more than 5 fields, considering that the last two fields are numeric values.
+
+5.RO: Scrieti o linie de comanda in care programul C se executa doar daca programele A si B s-a executat cu success.
+EN: Write a command line in which program C is executed only if programs A and B have executed successfully.
+
+6.RO: Se da un fisier a.txt care contine pe fiecare linie trei nume de fisiere separate prin spatiu. Scrieti un script Shell care pentru fiecare linie concateneaza primele doua fisere intr-al treilea, doar daca al treilea fisier nu exista deja, iar primele doua fisiere exista.
+EN: Consider a file a.txt that has three file names on each line. Write a Shell script that for each line concatenates the first two files into the third, only if the third file does not exist already, and the first two files exist.
+
+7.RO: Considerand ca apelul fork se executa cu succes, cate procese va crea programul de mai jos, excluzand procesul parinte initial? Justificati raspunsul.
+EN: Considering that the fork call is executed successfully, how many processes will be created by the program below, excluding the initial parent process? Justify your answer.
+
+    int main() {
+        while(wait(NULL) != -1)
+            if(fork() < 0 || fork() > 0) {
+                exit(0);
+            }
+        }
+        return 0;
+    }
+
+8.RO: Scrieti un apel exec care executa programul si argumentele date ca argumente programului ./a de mai jos (ex: ./a ls -l /etc/passwd)
+EN: Write an exec call that executes the program and arguments given as arguments to program ./a below (i.e. ./a ls -l /etc/passwd)
+
+    int main(int argc, char** argv) {
+        ...
+    }
+
+9.RO: Adăugați liniile necesare pentru ca variabila line_count să conțină numărul de linii din ieșirea standard a comenzii ls -la /etc.
+EN: Add the necessary lines so that the line_count variable holds the number of lines from the standard output of the ls -la /etc command.
+
+#include <stdio.h>
+#include <stdlib.h> // For popen
+// ...
+int line_count;
+// Add your code here
+// ...
+printf("Total lines: %d\n", line_count);
+
+10.RO: Detaliați funcționarea apelului sistem read la citirea dintr-un pipe gol atunci când capătul de scriere este încă deschis de cel puțin un proces.
+EN: Detail the behavior of the read system call when reading from an empty pipe when the write end is still open by at least one process.
+
+11.RO: Procesele P1, P2 și P3 trebuie să comunice circular: P1 trimite date către P2, P2 trimite date către P3, iar P3 trimite date înapoi către P1. Schițați comenzile mkfifo necesare și apelurile open() de bază în fiecare proces pentru a stabili această comunicare, ignorând gestionarea erorilor.
+EN: Processes P1, P2, and P3 need to communicate in a circular fashion: P1 sends data to P2, P2 sends data to P3, and P3 sends data back to P1. Sketch the necessary mkfifo commands and the basic open() calls within each process to establish this communication, ignoring error handling.
+
+P1 --FIFO_A--> P2
+P2 --FIFO_B--> P3
+P3 --FIFO_C--> P1
+
+12.RO: Protejati sectiunea critica din programul de mai jos, fara a folosi mutex.
+EN: Protect the critical section in the program below, without using mutexes.
+
+Answer:
+
+int n = 0;
+
+void* f(void* v){
+        
+	if(n < 500) {
+            n++;
+        }
+
+        if(n > 600) {
+            n = 0;
+        }
+        
+
+        return NULL;
+}
+
+int main(){
+    pthread_t t;
+    pthread_create(&t, NULL, f, NULL);
+    pthread_join(t, NULL);
+    return 0;
+}
+
+13.RO: Scrieti linia de cod lipsa pentru decrementare valoarea semaforului.Explicati ce se intampla cand valoarea ajunge la 0
+EN: Write the line of code for decremeting the semaphore value. Explain what happens when the value is 0
+
+Answer:
+
+sem_t mutex;
+
+void* voteaza(void* args){
+
+        int i = *(int*)args;
+        printf(“voter  %d  has reached the voting station\n”,i);
+
+    	
+        printf(“voter  %d has entered the voting booth\n”,i);
+        sleep(2);
+        printf(“voter %d has voted\n",i);
+        sem_post(&mutex);
+
+        return NULL;
+}
+
+
+int main(){
+
+        int nr_votanti = 5;
+        pthread_t thread_votanti[nr_votanti];
+        int thread_ids[nr_votanti];
+        sem_init(&mutex,0,3);
+        for(int i=0;i<nr_votanti;i++){
+                thread_ids[i]=i;
+                pthread_create(&thread_votanti[i],NULL,voteaza,&thread_ids[i]);
+        }
+    for(int i=0;i<nr_votanti;i++){
+                pthread_join(thread_votanti[i],NULL);
+    }
+
+        sem_destroy(&mutex);
+        return 0;
+
+}
+
+14.RO: Ce face functia pthread_cond_wait cu mutexul primit ca argument?
+EN: What does pthread_cond_wait do with the mutex it gets as an argument?
+
+15.RO: Cum ar fi afectata functionarea unui program daca toate rwlock-urile s-ar inlocui cu mutex-uri si toate apelurile rwlock_wrlock si rwlock_rdlock s-ar inlocui cu mutex_lock? Justificati raspunsul.
+EN: How would affect the functioning of a program the replacement of all rwlocks with mutexes and all calls to rwlock_wrlock and rwlock_rdlock are replaced with mutex_lock? Justify your answer.
+
+16.RO: Dati valori pentru T, N1, N2, N3 (toate strict pozitive) pentru care
+programul de mai jos se termina corect. In fiecare iteratie a buclei, se
+creeaza: 1 fir pentru f1 (care asteapta la b1), 2 fire pentru f2 (care
+asteapta la b2), si 3 fire pentru f3 (care asteapta la b3).
+EN: Give values for T, N1, N2, N3 (all strictly positive) for which the
+program below finishes correctly. In each loop iteration, it creates:
+1 thread for f1 (waits on b1), 2 threads for f2 (waits on b2), and 3 threads
+for f3 (waits on b3).
+
+#include <pthread.h>
+
+pthread_barrier_t b1, b2, b3;
+
+void* f1(void* a) { pthread_barrier_wait(&b1); return NULL; }
+void* f2(void* a) { pthread_barrier_wait(&b2); return NULL; }
+void* f3(void* a) { pthread_barrier_wait(&b3); return NULL; }
+
+int main() {
+    int T, N1, N2, N3;
+
+    pthread_t all_threads[6 * T];
+
+    pthread_barrier_init(&b1, NULL, N1);
+    pthread_barrier_init(&b2, NULL, N2);
+    pthread_barrier_init(&b3, NULL, N3);
+
+    for(int i=0; i<T; i++) {
+        int base_idx = i * 6;
+        pthread_create(&all_threads[base_idx + 0], NULL, f1, NULL);
+        pthread_create(&all_threads[base_idx + 1], NULL, f2, NULL);
+        pthread_create(&all_threads[base_idx + 2], NULL, f2, NULL);
+        pthread_create(&all_threads[base_idx + 3], NULL, f3, NULL);
+        pthread_create(&all_threads[base_idx + 4], NULL, f3, NULL);
+        pthread_create(&all_threads[base_idx + 5], NULL, f3, NULL);
+    }
+
+    for(int i=0; i<6*T; i++) {
+        pthread_join(all_threads[i], NULL);
+    }
+
+    pthread_barrier_destroy(&b1);
+    pthread_barrier_destroy(&b2);
+    pthread_barrier_destroy(&b3);
+    return 0;
+}
+
+17.RO: Ce puteţi face ca programator pentru a preveni deadlock-urile? Justificaţi răspunsul.
+EN: What can you do as a software developer to prevent deadlocks? Justify your answer.
+
+18.RO: Descrieti politica de planificare MLFQ?
+EN: Describe the MLFQ scheduling policy?
+
+19.RO: Un process are următoarea listă de zone de memorie nealocată: 32, 98, 99. Cum va arăta lista după două apeluri malloc(33) ştiind că se foloseşte algoritmul Best Fit?
+EN: CA process has the following list of unallocated memory zones: 32, 98, 99. What will the list be after two malloc(33) requests given that it uses the Best Fit algorithm?
+
+20.RO: Ce se intampla cu un link symbolic cand este sters fisierul spre care puncteaza?
+EN: What happens to a symbolic link when the file to which it points is deleted?

@@ -1,0 +1,57 @@
+
+Give a regular expression that accepts strings formatted as titles: sequence of words separated by spaces, each word being capitalized.
+ 
+Consider a text file that contains words (non-empty sequences of uppercase or lowercase letters) separated by SPACES on each line. Write four GREP commands that display lines that contain words that begin with an uppercase or lowercase vowel.  
+Consider a text file that contains on each line non-empty sequences of letters and/or digits separated by SPACES. Write two SED commands that display the lines that do not contain any digits in this file.
+ 
+Write a command line in which program C is executed only if programs A and B have executed successfully.  
+Consider a file a.txt that has three file names on each line. Write a Shell script that for each line concatenates the first two files into the third, only if the third file does not exist already, and the first two files exist
+
+Add the necessary lines so that the line_count variable holds the number of lines from the standard output of the ls -la /etc command.
+ 
+#include <stdio.h> #include <stdlib.h> // For popen // ... int line_count; // Add your code here // ... printf("Total lines: %d\n", line_count);  
+ 
+Processes P1, P2, and P3 need to communicate in a circular fashion: P1 sends data to P2, P2 sends data to P3, and P3 sends data back to P1. Sketch the necessary mkfifo commands and the basic open() calls within each process to establish this communication, ignoring error handling.
+ 
+P1 --FIFO_A--> P2 P2 --FIFO_B--> P3 P3 --FIFO_C--> P1  
+ 
+Protect the critical section in the program below, without using mutexes.
+ 
+Answer:
+ 
+int n = 0;
+ 
+void* f(void* v){
+ 
+        if(n < 500) {             n++;         }
+ 
+        if(n > 600) {             n = 0;         }
+ 
+        return NULL; }
+ 
+int main(){     pthread_t t;     pthread_create(&t, NULL, f, NULL);     pthread_join(t, NULL);     return 0; }
+
+EN: Give values for T, N1, N2, N3 (all strictly positive) for which the program below finishes correctly. In each loop iteration, it creates: 1 thread for f1 (waits on b1), 2 threads for f2 (waits on b2), and 3 threads for f3 (waits on b3).
+ 
+#include <pthread.h>
+ 
+pthread_barrier_t b1, b2, b3;
+ 
+void* f1(void* a) { pthread_barrier_wait(&b1); return NULL; } void* f2(void* a) { pthread_barrier_wait(&b2); return NULL; } void* f3(void* a) { pthread_barrier_wait(&b3); return NULL; }
+ 
+int main() {     int T, N1, N2, N3;
+ 
+    pthread_t all_threads[6 * T];
+ 
+    pthread_barrier_init(&b1, NULL, N1);     pthread_barrier_init(&b2, NULL, N2);     pthread_barrier_init(&b3, NULL, N3);
+ 
+    for(int i=0; i<T; i++) {         int base_idx = i * 6;         pthread_create(&all_threads[base_idx + 0], NULL, f1, NULL);         pthread_create(&all_threads[base_idx + 1], NULL, f2, NULL);         pthread_create(&all_threads[base_idx + 2], NULL, f2, NULL);         pthread_create(&all_threads[base_idx + 3], NULL, f3, NULL);         pthread_create(&all_threads[base_idx + 4], NULL, f3, NULL);         pthread_create(&all_threads[base_idx + 5], NULL, f3, NULL);     }
+ 
+    for(int i=0; i<6*T; i++) {         pthread_join(all_threads[i], NULL);     }
+ 
+    pthread_barrier_destroy(&b1);     pthread_barrier_destroy(&b2);     pthread_barrier_destroy(&b3);     return 0; }  
+ 
+Describe the MLFQ scheduling policy  
+ 
+EN: What happens to a symbolic link when the file to which it points is deleted?
+

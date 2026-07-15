@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Line Visualizer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+#sidebar { width: 380px; min-width: 380px; background: #16213e; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; border-right: 2px solid #0f3460; }
+h2 { color: #e94560; font-size: 1.1em; margin-bottom: 5px; }
+h3 { color: #e94560; font-size: 0.95em; }
+label { font-size: 0.85em; color: #a0a0c0; }
+select, input, button { background: #1a1a2e; color: #e0e0e0; border: 1px solid #0f3460; border-radius: 4px; padding: 6px 8px; font-size: 0.85em; width: 100%; }
+select:focus, input:focus { outline: none; border-color: #e94560; }
+button { background: #e94560; color: #fff; border: none; cursor: pointer; font-weight: bold; padding: 8px; transition: background 0.2s; }
+button:hover { background: #c73650; }
+.row { display: flex; gap: 6px; align-items: center; }
+.row input { flex: 1; }
+.row label { min-width: 20px; text-align: center; flex-shrink: 0; }
+#canvas-wrap { flex: 1; position: relative; }
+canvas { width: 100%; height: 100%; display: block; }
+.section { background: #1a1a3e; padding: 10px; border-radius: 6px; }
+#lineList { max-height: 150px; overflow-y: auto; }
+.line-item { padding: 4px 6px; margin: 2px 0; background: #0f3460; border-radius: 3px; font-size: 0.8em; display: flex; justify-content: space-between; align-items: center; }
+.line-item .del { cursor: pointer; color: #e94560; font-weight: bold; }
+#result { background: #0f3460; padding: 10px; border-radius: 6px; font-size: 0.85em; min-height: 60px; white-space: pre-wrap; }
+.hint { font-size: 0.75em; color: #666; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <h2>3D Line Visualizer</h2>
+
+  <div class="section">
+    <h3>Add Line</h3>
+    <label>Input Method:</label>
+    <select id="method" onchange="updateForm()">
+      <option value="twoPoints">Two Points</option>
+      <option value="pointVector">Point + Direction Vector</option>
+      <option value="parametric">Parametric Equations</option>
+      <option value="symmetric">Symmetric Equations</option>
+      <option value="cartesian">Cartesian (2 Planes)</option>
+    </select>
+    <div id="formArea" style="margin-top:8px"></div>
+    <button onclick="addLine()" style="margin-top:8px">Add Line</button>
+    <div id="error" style="color:#e94560;font-size:0.8em;margin-top:4px"></div>
+  </div>
+
+  <div class="section">
+    <h3>Lines</h3>
+    <div id="lineList"></div>
+  </div>
+
+  <div class="section">
+    <h3>Compare Two Lines</h3>
+    <div class="row">
+      <select id="sel1" style="flex:1"></select>
+      <select id="sel2" style="flex:1"></select>
+    </div>
+    <button onclick="compareLines()" style="margin-top:6px">Compare</button>
+    <div id="result" style="margin-top:6px"></div>
+  </div>
+
+  <div class="section" style="font-size:0.75em;color:#666">
+    Drag to rotate, scroll to zoom, right-drag to pan.
+  </div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+</div>
+
+<script>
+// ===== DATA =====
+const lines = []; // {point:[x,y,z], dir:[x,y,z], color:string, label:string}
+const colors = ['#e94560','#00d2ff','#00ff88','#ffaa00','#ff66cc','#aaffaa','#ffff66','#66ffff','#ff8866','#cc88ff'];
+let colorIdx = 0;
+let intersectionPoints = []; // [{point:[x,y,z], label:string}]
+
+// ===== FORM =====
+function setupEnterNavigation() {
+  const inputs = document.querySelectorAll('#formArea input');
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        } else {
+          addLine();
+        }
+      }
+    });
+  });
+  if (inputs.length > 0) inputs[0].focus();
+}
+
+function updateForm() {
+  const m = document.getElementById('method').value;
+  const f = document.getElementById('formArea');
+  let h = '';
+  const r = (lbl, id1, id2, id3) => `<div class="row"><label>${lbl}</label><input id="${id1}" placeholder="x"><input id="${id2}" placeholder="y"><input id="${id3}" placeholder="z"></div>`;
+  if (m === 'twoPoints') {
+    h = r('P₁','p1x','p1y','p1z') + r('P₂','p2x','p2y','p2z');
+  } else if (m === 'pointVector') {
+    h = r('P','pvx','pvy','pvz') + r('d','dvx','dvy','dvz');
+  } else if (m === 'parametric') {
+    h = `<div class="hint">x = x₀ + a·t, y = y₀ + b·t, z = z₀ + c·t</div>` +
+      `<div class="row"><label>x:</label><input id="pa" placeholder="x₀"><input id="pb" placeholder="a"></div>` +
+      `<div class="row"><label>y:</label><input id="pc" placeholder="y₀"><input id="pd" placeholder="b"></div>` +
+      `<div class="row"><label>z:</label><input id="pe" placeholder="z₀"><input id="pf" placeholder="c"></div>`;
+  } else if (m === 'symmetric') {
+    h = `<div class="hint">(x−x₀)/a = (y−y₀)/b = (z−z₀)/c</div>` +
+      `<div class="row"><label>x:</label><input id="sx" placeholder="x₀"><input id="sa" placeholder="a"></div>` +
+      `<div class="row"><label>y:</label><input id="sy" placeholder="y₀"><input id="sb" placeholder="b"></div>` +
+      `<div class="row"><label>z:</label><input id="sz" placeholder="z₀"><input id="sc" placeholder="c"></div>`;
+  } else if (m === 'cartesian') {
+    h = `<div class="hint">Plane1: a₁x+b₁y+c₁z+d₁=0</div>` +
+      `<div class="row"><input id="a1" placeholder="a₁"><input id="b1" placeholder="b₁"><input id="c1" placeholder="c₁"><input id="d1" placeholder="d₁"></div>` +
+      `<div class="hint">Plane2: a₂x+b₂y+c₂z+d₂=0</div>` +
+      `<div class="row"><input id="a2" placeholder="a₂"><input id="b2" placeholder="b₂"><input id="c2" placeholder="c₂"><input id="d2" placeholder="d₂"></div>`;
+  }
+  f.innerHTML = h;
+  setupEnterNavigation();
+}
+
+function getVal(id) { const v = parseFloat(document.getElementById(id).value); if (isNaN(v)) throw `Invalid number in field "${id}"`; return v; }
+
+function addLine() {
+  const err = document.getElementById('error');
+  err.textContent = '';
+  try {
+    const m = document.getElementById('method').value;
+    let point, dir, extraPoints = [];
+    if (m === 'twoPoints') {
+      const p1 = [getVal('p1x'), getVal('p1y'), getVal('p1z')];
+      const p2 = [getVal('p2x'), getVal('p2y'), getVal('p2z')];
+      dir = [p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]];
+      if (dir[0]===0 && dir[1]===0 && dir[2]===0) throw 'Points must be distinct';
+      point = p1;
+      extraPoints = [p2];
+    } else if (m === 'pointVector') {
+      point = [getVal('pvx'), getVal('pvy'), getVal('pvz')];
+      dir = [getVal('dvx'), getVal('dvy'), getVal('dvz')];
+    } else if (m === 'parametric') {
+      point = [getVal('pa'), getVal('pc'), getVal('pe')];
+      dir = [getVal('pb'), getVal('pd'), getVal('pf')];
+    } else if (m === 'symmetric') {
+      point = [getVal('sx'), getVal('sy'), getVal('sz')];
+      dir = [getVal('sa'), getVal('sb'), getVal('sc')];
+    } else if (m === 'cartesian') {
+      const n1 = [getVal('a1'), getVal('b1'), getVal('c1')], d1 = -getVal('d1');
+      const n2 = [getVal('a2'), getVal('b2'), getVal('c2')], d2 = -getVal('d2');
+      dir = cross(n1, n2);
+      if (mag(dir) < 1e-9) throw 'Planes are parallel or identical (no unique line)';
+      point = findPointOnTwoPlanes(n1, d1, n2, d2);
+    }
+    if (mag(dir) < 1e-9) throw 'Direction vector cannot be zero';
+    const color = colors[colorIdx++ % colors.length];
+    const label = 'L' + (lines.length + 1);
+    lines.push({point, dir, color, label, extraPoints});
+    refreshUI();
+    render();
+  } catch(e) { err.textContent = e; }
+}
+
+function cross(a,b) { return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+function dot(a,b) { return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+function mag(v) { return Math.sqrt(dot(v,v)); }
+function sub(a,b) { return [a[0]-b[0],a[1]-b[1],a[2]-b[2]]; }
+
+function findPointOnTwoPlanes(n1, d1, n2, d2) {
+  const dir = cross(n1, n2);
+  for (let skip = 2; skip >= 0; skip--) {
+    const i = (skip+1)%3, j = (skip+2)%3;
+    const det = n1[i]*n2[j] - n1[j]*n2[i];
+    if (Math.abs(det) > 1e-9) {
+      const p = [0,0,0];
+      p[i] = (d1*n2[j] - d2*n1[j]) / det;
+      p[j] = (n1[i]*d2 - n2[i]*d1) / det;
+      p[skip] = 0;
+      return p;
+    }
+  }
+  throw 'Could not find point on line';
+}
+
+function refreshUI() {
+  const list = document.getElementById('lineList');
+  list.innerHTML = lines.map((l,i) => `<div class="line-item"><span style="color:${l.color}">■</span> ${l.label}: P(${l.point.map(v=>v.toFixed(1))}) d(${l.dir.map(v=>v.toFixed(1))}) <span class="del" onclick="removeLine(${i})">✕</span></div>`).join('');
+  const opts = lines.map((l,i) => `<option value="${i}">${l.label}</option>`).join('');
+  document.getElementById('sel1').innerHTML = opts;
+  document.getElementById('sel2').innerHTML = opts;
+  if (lines.length >= 2) document.getElementById('sel2').selectedIndex = 1;
+}
+
+function removeLine(i) { lines.splice(i,1); lines.forEach((l,j)=>l.label='L'+(j+1)); refreshUI(); render(); }
+
+// ===== COMPARE =====
+function compareLines() {
+  const res = document.getElementById('result');
+  intersectionPoints = [];
+  if (lines.length < 2) { res.textContent = 'Add at least 2 lines.'; render(); return; }
+  const i = +document.getElementById('sel1').value, j = +document.getElementById('sel2').value;
+  if (i === j) { res.textContent = 'Select two different lines.'; render(); return; }
+  const l1 = lines[i], l2 = lines[j];
+  const d1 = l1.dir, d2 = l2.dir, w = sub(l2.point, l1.point);
+  const c = cross(d1, d2);
+  const cMag = mag(c);
+
+  if (cMag < 1e-9) {
+    const w_cross_d1 = cross(w, d1);
+    if (mag(w_cross_d1) < 1e-9) {
+      res.textContent = `${l1.label} and ${l2.label} are IDENTICAL (coincident).`;
+    } else {
+      const dist = mag(w_cross_d1) / mag(d1);
+      res.textContent = `${l1.label} and ${l2.label} are PARALLEL.\nDistance: ${dist.toFixed(4)}`;
+    }
+    render();
+    return;
+  }
+
+  const tripleProduct = dot(w, c);
+  if (Math.abs(tripleProduct) > 1e-6) {
+    const dist = Math.abs(tripleProduct) / cMag;
+    res.textContent = `${l1.label} and ${l2.label} are SKEW.\nDistance: ${dist.toFixed(4)}`;
+  } else {
+    let t;
+    const A = [[d1[0], -d2[0]], [d1[1], -d2[1]], [d1[2], -d2[2]]];
+    const B = [w[0], w[1], w[2]];
+    let bestDet = 0, bestPair = [0,1];
+    for (let a = 0; a < 3; a++) for (let b = a+1; b < 3; b++) {
+      const det = Math.abs(A[a][0]*A[b][1] - A[a][1]*A[b][0]);
+      if (det > bestDet) { bestDet = det; bestPair = [a,b]; }
+    }
+    const [r1,r2] = bestPair;
+    const det = A[r1][0]*A[r2][1] - A[r1][1]*A[r2][0];
+    t = (B[r1]*A[r2][1] - B[r2]*A[r1][1]) / det;
+    const pt = [l1.point[0]+t*d1[0], l1.point[1]+t*d1[1], l1.point[2]+t*d1[2]];
+    intersectionPoints = [{point: pt, label: `${l1.label}∩${l2.label}`}];
+    res.textContent = `${l1.label} and ${l2.label} INTERSECT.\nPoint: (${pt[0].toFixed(4)}, ${pt[1].toFixed(4)}, ${pt[2].toFixed(4)})`;
+  }
+  render();
+}
+
+// ===== 3D RENDERING =====
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let rotX = -0.5, rotY = 0.6, zoom = 200, panX = 0, panY = 0;
+const BASE_AXIS_LEN = 5;
+const MIN_ZOOM = 20;
+
+function getAxisLen() {
+  // Always ensure axes fill the visible canvas area
+  const maxDim = Math.max(canvas.width, canvas.height) / 2;
+  const neededLen = maxDim / zoom + 2;
+  return Math.max(BASE_AXIS_LEN, neededLen);
+}
+
+function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; render(); }
+window.addEventListener('resize', resize);
+
+function project(x, y, z) {
+  let cx = Math.cos(rotY), sx = Math.sin(rotY);
+  let x1 = x*cx + z*sx, z1 = -x*sx + z*cx, y1 = y;
+  let cy = Math.cos(rotX), sy = Math.sin(rotX);
+  let y2 = y1*cy - z1*sy, z2 = y1*sy + z1*cy;
+  const scale = zoom;
+  const ox = canvas.width/2 + panX, oy = canvas.height/2 + panY;
+  return [ox + x1*scale, oy - y2*scale, z2];
+}
+
+function drawPoint(px, py, radius, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI*2); ctx.fill();
+}
+
+function drawDiamond(px, py, size, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(px, py - size);
+  ctx.lineTo(px + size, py);
+  ctx.lineTo(px, py + size);
+  ctx.lineTo(px - size, py);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function render() {
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0,0,W,H);
+
+  const axLen = getAxisLen();
+  const gridSize = Math.ceil(axLen);
+
+  // Draw axes
+  const axes = [{v:[axLen,0,0],c:'#ff4444',l:'X'},{v:[0,axLen,0],c:'#44ff44',l:'Y'},{v:[0,0,axLen],c:'#4488ff',l:'Z'}];
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  for (const a of axes) {
+    const p = project(...a.v);
+    const n = project(-a.v[0],-a.v[1],-a.v[2]);
+    ctx.strokeStyle = a.c;
+    ctx.beginPath(); ctx.moveTo(n[0],n[1]); ctx.lineTo(p[0],p[1]); ctx.stroke();
+    ctx.fillStyle = a.c;
+    ctx.font = '12px sans-serif';
+    ctx.fillText(a.l, p[0]+4, p[1]-4);
+  }
+  ctx.globalAlpha = 1;
+
+  // Grid on XZ plane
+  ctx.strokeStyle = '#ffffff10';
+  ctx.lineWidth = 0.5;
+  for (let i = -gridSize; i <= gridSize; i++) {
+    let a = project(i,0,-gridSize), b = project(i,0,gridSize);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    a = project(-gridSize,0,i); b = project(gridSize,0,i);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  }
+
+  // Draw lines (clipped to axis bounds)
+  function clipLineToBox(pt, dir, boxLen) {
+    let tMin = -1e9, tMax = 1e9;
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs(dir[i]) < 1e-12) {
+        if (pt[i] < -boxLen || pt[i] > boxLen) return null;
+      } else {
+        let t1 = (-boxLen - pt[i]) / dir[i], t2 = (boxLen - pt[i]) / dir[i];
+        if (t1 > t2) [t1, t2] = [t2, t1];
+        tMin = Math.max(tMin, t1); tMax = Math.min(tMax, t2);
+        if (tMin > tMax) return null;
+      }
+    }
+    return [
+      [pt[0]+tMin*dir[0], pt[1]+tMin*dir[1], pt[2]+tMin*dir[2]],
+      [pt[0]+tMax*dir[0], pt[1]+tMax*dir[1], pt[2]+tMax*dir[2]]
+    ];
+  }
+  for (const l of lines) {
+    const clipped = clipLineToBox(l.point, l.dir, axLen);
+    if (!clipped) continue;
+    const [p1, p2] = clipped;
+    const a = project(...p1), b = project(...p2);
+    ctx.strokeStyle = l.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+
+    // Draw defining point
+    const lp = project(...l.point);
+    drawPoint(lp[0], lp[1], 4, l.color);
+    ctx.fillStyle = l.color;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(l.label, lp[0]+8, lp[1]-8);
+
+    // Draw direction vector arrow from point
+    const dirEnd = [l.point[0]+l.dir[0], l.point[1]+l.dir[1], l.point[2]+l.dir[2]];
+    const dp = project(...dirEnd);
+    ctx.strokeStyle = l.color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(lp[0],lp[1]); ctx.lineTo(dp[0],dp[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrowhead
+    const angle = Math.atan2(dp[1]-lp[1], dp[0]-lp[0]);
+    ctx.beginPath();
+    ctx.moveTo(dp[0], dp[1]);
+    ctx.lineTo(dp[0]-8*Math.cos(angle-0.4), dp[1]-8*Math.sin(angle-0.4));
+    ctx.lineTo(dp[0]-8*Math.cos(angle+0.4), dp[1]-8*Math.sin(angle+0.4));
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw extra points (e.g. second point for twoPoints input)
+    if (l.extraPoints) {
+      for (const ep of l.extraPoints) {
+        const epp = project(...ep);
+        drawPoint(epp[0], epp[1], 4, l.color);
+      }
+    }
+  }
+
+  // Draw intersection points
+  for (const ip of intersectionPoints) {
+    const pp = project(...ip.point);
+    drawDiamond(pp[0], pp[1], 7, '#ffffff');
+    drawDiamond(pp[0], pp[1], 5, '#ffff00');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(ip.label, pp[0]+10, pp[1]-10);
+    ctx.fillStyle = '#ffff00';
+    ctx.font = '11px sans-serif';
+    const pt = ip.point;
+    ctx.fillText(`(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)}, ${pt[2].toFixed(2)})`, pp[0]+10, pp[1]+4);
+  }
+}
+
+// Mouse controls
+let dragging = false, rightDrag = false, lastX, lastY;
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 2) rightDrag = true; else dragging = true;
+  lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('mouseup', () => { dragging = false; rightDrag = false; });
+window.addEventListener('mousemove', e => {
+  if (dragging) {
+    rotY += (e.clientX - lastX) * 0.005;
+    rotX += (e.clientY - lastY) * 0.005;
+    lastX = e.clientX; lastY = e.clientY;
+    render();
+  } else if (rightDrag) {
+    panX += e.clientX - lastX;
+    panY += e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    render();
+  }
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom *= e.deltaY > 0 ? 0.9 : 1.1;
+  if (zoom < MIN_ZOOM) zoom = MIN_ZOOM;
+  render();
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Init
+updateForm();
+resize();
+</script>
+</body>
+</html>

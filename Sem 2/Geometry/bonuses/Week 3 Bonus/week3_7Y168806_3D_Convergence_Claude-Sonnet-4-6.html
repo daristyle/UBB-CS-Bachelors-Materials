@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Convergence Visualizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  #sidebar {
+    width: 300px; min-width: 300px; background: #16213e; padding: 16px;
+    display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+    border-right: 1px solid #0f3460;
+  }
+  h2 { color: #e94560; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+  h3 { color: #a0a0c0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+  .section { background: #0f3460; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 0.8rem; color: #a0a0c0; }
+  input[type="number"], input[type="text"] {
+    background: #1a1a2e; border: 1px solid #0f3460; color: #e0e0e0;
+    padding: 6px 8px; border-radius: 4px; width: 100%; font-size: 0.85rem;
+  }
+  input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #e94560; }
+  .coords-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  button {
+    background: #e94560; color: white; border: none; padding: 8px 12px;
+    border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;
+  }
+  button:hover { background: #c73652; }
+  button.secondary { background: #0f3460; }
+  button.secondary:hover { background: #1a4a80; }
+  #points-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+  .point-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    background: #1a1a2e; border-radius: 4px; font-size: 0.8rem;
+    border-left: 3px solid #555; cursor: pointer; transition: border-color 0.2s;
+  }
+  .point-item:hover { border-color: #e94560; }
+  .point-item.center { border-color: #ffd700; }
+  .point-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .point-coords { flex: 1; color: #a0a0c0; }
+  .point-label { font-weight: bold; }
+  .btn-set-center { background: #333; color: #ffd700; border: 1px solid #ffd700; padding: 2px 6px; font-size: 0.7rem; border-radius: 3px; }
+  .btn-set-center:hover { background: #ffd700; color: #000; }
+  .btn-remove { background: transparent; color: #e94560; border: none; padding: 2px 6px; font-size: 0.9rem; cursor: pointer; }
+  .btn-remove:hover { color: #ff6b6b; }
+  #canvas-container { flex: 1; position: relative; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .info-bar {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(15,52,96,0.8); padding: 6px 14px; border-radius: 20px;
+    font-size: 0.75rem; color: #a0a0c0; pointer-events: none;
+  }
+  .ball-info {
+    font-size: 0.8rem; color: #a0a0c0; padding: 4px 0;
+  }
+  .ball-info span { color: #ffd700; }
+  #no-points { color: #555; font-size: 0.8rem; text-align: center; padding: 10px; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <h2>3D Convergence Visualizer</h2>
+
+  <div class="section">
+    <h3>Add Point</h3>
+    <div class="coords-row">
+      <div>
+        <label>X</label>
+        <input type="number" id="px" value="0" step="0.1" onkeydown="if(event.key==='Enter'){document.getElementById('py').focus();event.preventDefault();}">  
+      </div>
+      <div>
+        <label>Y</label>
+        <input type="number" id="py" value="0" step="0.1" onkeydown="if(event.key==='Enter'){document.getElementById('pz').focus();event.preventDefault();}">  
+      </div>
+      <div>
+        <label>Z</label>
+        <input type="number" id="pz" value="0" step="0.1" onkeydown="if(event.key==='Enter'){addPoint();event.preventDefault();}">  
+      </div>
+    </div>
+    <button onclick="addPoint()">Add Point</button>
+  </div>
+
+  <div class="section">
+    <h3>Ball Settings</h3>
+    <div id="ball-center-info" class="ball-info">Center: <span>None selected</span></div>
+    <div>
+      <label>Radius</label>
+      <input type="number" id="ball-radius" value="1" min="0" step="0.1" onkeydown="if(event.key==='Enter'){applyBall();event.preventDefault();}">  
+    </div>
+    <button onclick="applyBall()">Apply Ball</button>
+    <button class="secondary" onclick="clearBall()">Clear Ball</button>
+  </div>
+
+  <div class="section" style="flex:1; min-height:0;">
+    <h3>Points</h3>
+    <div id="points-list">
+      <div id="no-points">No points added yet</div>
+    </div>
+  </div>
+</div>
+
+<div id="canvas-container">
+  <canvas id="canvas"></canvas>
+  <div class="info-bar">Left drag: rotate &nbsp;|&nbsp; Right drag / scroll: zoom &nbsp;|&nbsp; Middle drag: pan</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let points = [];
+let centerIndex = null;
+let ballRadius = 0;
+let ballActive = false;
+
+// Camera state
+let rotX = 0.4, rotY = 0.6;
+let zoom = 1;
+let panX = 0, panY = 0;
+let autoScale = 100;
+
+// Mouse state
+let mouse = { down: false, button: 0, x: 0, y: 0 };
+
+function resize() {
+  const container = document.getElementById('canvas-container');
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  draw();
+}
+
+window.addEventListener('resize', resize);
+
+// Mouse events
+canvas.addEventListener('mousedown', e => {
+  mouse.down = true;
+  mouse.button = e.button;
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  e.preventDefault();
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousemove', e => {
+  if (!mouse.down) return;
+  const dx = e.clientX - mouse.x;
+  const dy = e.clientY - mouse.y;
+  if (mouse.button === 0) {
+    rotY += dx * 0.005;
+    rotX += dy * 0.005;
+  } else if (mouse.button === 2) {
+    zoom *= (1 - dy * 0.005);
+    zoom = Math.max(0.05, Math.min(20, zoom));
+  } else if (mouse.button === 1) {
+    panX += dx;
+    panY += dy;
+  }
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  draw();
+});
+canvas.addEventListener('mouseup', () => mouse.down = false);
+canvas.addEventListener('wheel', e => {
+  zoom *= e.deltaY > 0 ? 0.9 : 1.1;
+  zoom = Math.max(0.05, Math.min(20, zoom));
+  draw();
+  e.preventDefault();
+}, { passive: false });
+
+function project(x, y, z) {
+  // Rotate around X axis
+  let y1 = y * Math.cos(rotX) - z * Math.sin(rotX);
+  let z1 = y * Math.sin(rotX) + z * Math.cos(rotX);
+  // Rotate around Y axis
+  let x2 = x * Math.cos(rotY) + z1 * Math.sin(rotY);
+  let z2 = -x * Math.sin(rotY) + z1 * Math.cos(rotY);
+
+  const fov = 600;
+  const dist = fov + z2 * autoScale * zoom;
+  const scale = fov / Math.max(dist, 1);
+
+  const cx = canvas.width / 2 + panX;
+  const cy = canvas.height / 2 + panY;
+
+  return {
+    sx: cx + x2 * autoScale * zoom * scale,
+    sy: cy - y1 * autoScale * zoom * scale,
+    depth: z2
+  };
+}
+
+function computeAutoScale() {
+  if (points.length === 0) { autoScale = 100; return; }
+  let maxDist = 0;
+  for (const p of points) {
+    const d = Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+    if (d > maxDist) maxDist = d;
+  }
+  if (maxDist === 0) { autoScale = 100; return; }
+  // Fit so that maxDist maps to ~35% of min(width,height)
+  const minDim = Math.min(canvas.width, canvas.height);
+  autoScale = (minDim * 0.35) / (maxDist * zoom);
+}
+
+function getPointColor(i) {
+  if (!ballActive) return '#4fc3f7';
+  if (i === centerIndex) return '#ffd700';
+  const p = points[i];
+  const c = points[centerIndex];
+  const dist = Math.sqrt((p.x-c.x)**2 + (p.y-c.y)**2 + (p.z-c.z)**2);
+  return dist <= ballRadius ? '#66bb6a' : '#ef5350';
+}
+
+function drawAxes() {
+  const axisLen = gridExtent + gridStep;
+  const axes = [
+    { end: [axisLen, 0, 0], color: '#ef5350', label: 'X' },
+    { end: [0, axisLen, 0], color: '#66bb6a', label: 'Y' },
+    { end: [0, 0, axisLen], color: '#4fc3f7', label: 'Z' },
+  ];
+  const origin = project(0, 0, 0);
+  for (const ax of axes) {
+    const tip = project(...ax.end);
+    ctx.beginPath();
+    ctx.moveTo(origin.sx, origin.sy);
+    ctx.lineTo(tip.sx, tip.sy);
+    ctx.strokeStyle = ax.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = ax.color;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(ax.label, tip.sx + 5, tip.sy - 5);
+  }
+}
+
+function computeGridParams() {
+  let maxCoord = 2;
+  for (const p of points) {
+    maxCoord = Math.max(maxCoord, Math.abs(p.x), Math.abs(p.y), Math.abs(p.z));
+  }
+  if (ballActive && centerIndex !== null) {
+    const c = points[centerIndex];
+    maxCoord = Math.max(maxCoord,
+      Math.abs(c.x) + ballRadius, Math.abs(c.y) + ballRadius, Math.abs(c.z) + ballRadius);
+  }
+  // Round up to a nice step, scaled by zoom so lines spread apart when zooming out
+  const zoomFactor = Math.max(1, 1 / zoom);
+  const rawStep = maxCoord / 2 * zoomFactor;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+  const step = Math.ceil(rawStep / magnitude) * magnitude;
+  const extent = Math.ceil(maxCoord / step) * step * 20;
+  return { step, extent };
+}
+
+let gridStep = 1, gridExtent = 4;
+
+function drawGrid() {
+  const { step, extent } = computeGridParams();
+  gridStep = step;
+  gridExtent = extent;
+
+  // XZ plane (y=0) — blue-ish
+  ctx.lineWidth = 0.8;
+  for (let i = -extent; i <= extent; i += step) {
+    ctx.beginPath();
+    const a = project(i, 0, -extent);
+    const b = project(i, 0,  extent);
+    ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy);
+    ctx.strokeStyle = 'rgba(100,140,220,0.35)';
+    ctx.stroke();
+    ctx.beginPath();
+    const c = project(-extent, 0, i);
+    const d = project( extent, 0, i);
+    ctx.moveTo(c.sx, c.sy); ctx.lineTo(d.sx, d.sy);
+    ctx.strokeStyle = 'rgba(100,140,220,0.35)';
+    ctx.stroke();
+  }
+
+  // XY plane (z=0) — green-ish
+  for (let i = -extent; i <= extent; i += step) {
+    ctx.beginPath();
+    const a = project(i, -extent, 0);
+    const b = project(i,  extent, 0);
+    ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy);
+    ctx.strokeStyle = 'rgba(100,200,130,0.25)';
+    ctx.stroke();
+    ctx.beginPath();
+    const c = project(-extent, i, 0);
+    const d = project( extent, i, 0);
+    ctx.moveTo(c.sx, c.sy); ctx.lineTo(d.sx, d.sy);
+    ctx.strokeStyle = 'rgba(100,200,130,0.25)';
+    ctx.stroke();
+  }
+
+  // YZ plane (x=0) — red-ish
+  for (let i = -extent; i <= extent; i += step) {
+    ctx.beginPath();
+    const a = project(0, i, -extent);
+    const b = project(0, i,  extent);
+    ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy);
+    ctx.strokeStyle = 'rgba(220,100,100,0.25)';
+    ctx.stroke();
+    ctx.beginPath();
+    const c = project(0, -extent, i);
+    const d = project(0,  extent, i);
+    ctx.moveTo(c.sx, c.sy); ctx.lineTo(d.sx, d.sy);
+    ctx.strokeStyle = 'rgba(220,100,100,0.25)';
+    ctx.stroke();
+  }
+}
+
+function drawBallWireframe() {
+  if (!ballActive || centerIndex === null) return;
+  const c = points[centerIndex];
+  const r = ballRadius;
+  const steps = 60;
+
+  // Draw translucent filled sphere using latitude slices
+  const latSteps = 18;
+  for (let li = 0; li < latSteps; li++) {
+    const lat0 = Math.PI * (-0.5 + li / latSteps);
+    const lat1 = Math.PI * (-0.5 + (li + 1) / latSteps);
+    const y0 = r * Math.sin(lat0), y1 = r * Math.sin(lat1);
+    const r0 = r * Math.cos(lat0), r1 = r * Math.cos(lat1);
+    for (let si = 0; si < steps; si++) {
+      const t0 = (si / steps) * Math.PI * 2;
+      const t1 = ((si + 1) / steps) * Math.PI * 2;
+      const p00 = project(c.x + r0 * Math.cos(t0), c.y + y0, c.z + r0 * Math.sin(t0));
+      const p10 = project(c.x + r1 * Math.cos(t0), c.y + y1, c.z + r1 * Math.sin(t0));
+      const p01 = project(c.x + r0 * Math.cos(t1), c.y + y0, c.z + r0 * Math.sin(t1));
+      const p11 = project(c.x + r1 * Math.cos(t1), c.y + y1, c.z + r1 * Math.sin(t1));
+      ctx.beginPath();
+      ctx.moveTo(p00.sx, p00.sy);
+      ctx.lineTo(p10.sx, p10.sy);
+      ctx.lineTo(p11.sx, p11.sy);
+      ctx.lineTo(p01.sx, p01.sy);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(255,215,0,0.04)';
+      ctx.fill();
+    }
+  }
+
+  // Wireframe circles
+  const planes = [
+    (t) => [c.x + r * Math.cos(t), c.y + r * Math.sin(t), c.z],
+    (t) => [c.x + r * Math.cos(t), c.y, c.z + r * Math.sin(t)],
+    (t) => [c.x, c.y + r * Math.cos(t), c.z + r * Math.sin(t)],
+  ];
+  for (const plane of planes) {
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI * 2;
+      const [px, py, pz] = plane(t);
+      const proj = project(px, py, pz);
+      if (i === 0) ctx.moveTo(proj.sx, proj.sy);
+      else ctx.lineTo(proj.sx, proj.sy);
+    }
+    ctx.strokeStyle = 'rgba(255,215,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function draw() {
+  computeAutoScale();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background grid hint
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawGrid();
+  drawAxes();
+  drawBallWireframe();
+
+  // Sort points by depth for painter's algorithm
+  const projected = points.map((p, i) => ({ ...project(p.x, p.y, p.z), i }));
+  projected.sort((a, b) => a.depth - b.depth);
+
+  for (const pp of projected) {
+    const i = pp.i;
+    const color = getPointColor(i);
+    const r = i === centerIndex ? 8 : 6;
+
+    // Shadow
+    ctx.beginPath();
+    ctx.arc(pp.sx + 2, pp.sy + 2, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fill();
+
+    // Point
+    ctx.beginPath();
+    ctx.arc(pp.sx, pp.sy, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#e0e0e0';
+    ctx.font = '11px sans-serif';
+    ctx.fillText(`P${i+1}(${points[i].x},${points[i].y},${points[i].z})`, pp.sx + r + 3, pp.sy - r);
+  }
+}
+
+function addPoint() {
+  const x = parseFloat(document.getElementById('px').value) || 0;
+  const y = parseFloat(document.getElementById('py').value) || 0;
+  const z = parseFloat(document.getElementById('pz').value) || 0;
+  points.push({ x, y, z });
+  updatePointsList();
+  // Reset zoom to fit
+  zoom = 1;
+  panX = 0; panY = 0;
+  draw();
+}
+
+function removePoint(i) {
+  points.splice(i, 1);
+  if (centerIndex === i) { centerIndex = null; ballActive = false; }
+  else if (centerIndex !== null && centerIndex > i) centerIndex--;
+  updatePointsList();
+  draw();
+}
+
+function setCenterPoint(i) {
+  centerIndex = i;
+  document.getElementById('ball-center-info').innerHTML =
+    `Center: <span>P${i+1} (${points[i].x}, ${points[i].y}, ${points[i].z})</span>`;
+  updatePointsList();
+  if (ballActive) draw();
+}
+
+function applyBall() {
+  if (centerIndex === null) { alert('Please select a center point first.'); return; }
+  ballRadius = parseFloat(document.getElementById('ball-radius').value) || 0;
+  ballActive = true;
+  updatePointsList();
+  draw();
+}
+
+function clearBall() {
+  ballActive = false;
+  centerIndex = null;
+  document.getElementById('ball-center-info').innerHTML = `Center: <span>None selected</span>`;
+  updatePointsList();
+  draw();
+}
+
+function updatePointsList() {
+  const list = document.getElementById('points-list');
+  const noPoints = document.getElementById('no-points');
+  if (points.length === 0) {
+    list.innerHTML = '<div id="no-points">No points added yet</div>';
+    return;
+  }
+  list.innerHTML = '';
+  points.forEach((p, i) => {
+    const color = getPointColor(i);
+    const isCenter = i === centerIndex;
+    const div = document.createElement('div');
+    div.className = 'point-item' + (isCenter ? ' center' : '');
+    div.innerHTML = `
+      <div class="point-dot" style="background:${color}"></div>
+      <div class="point-coords">
+        <span class="point-label">P${i+1}</span>
+        (${p.x}, ${p.y}, ${p.z})
+      </div>
+      <button class="btn-set-center" onclick="setCenterPoint(${i})">⊙</button>
+      <button class="btn-remove" onclick="removePoint(${i})">✕</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+resize();
+</script>
+</body>
+</html>

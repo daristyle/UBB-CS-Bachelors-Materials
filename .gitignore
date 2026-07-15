@@ -1,0 +1,20 @@
+# JetBrains IDEs (CLion, PyCharm)
+.idea/
+cmake-build-debug/
+cmake-build-release/
+
+# C / C++ / Assembly / Qt Build Artifacts
+*.o
+*.out
+*.exe
+*.bin
+build/
+
+# Python
+__pycache__/
+venv/
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db

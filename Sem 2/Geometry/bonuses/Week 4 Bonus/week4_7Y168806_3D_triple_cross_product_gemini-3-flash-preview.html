@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triple Cross Product Visualizer - Gemini 3 Flash Preview</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: rgba(30, 30, 30, 0.9);
+            --text-color: #e0e0e0;
+            --accent-color: #4CAF50;
+            --input-bg: #2d2d2d;
+            --input-border: #444;
+            --formula-color: #ffca28;
+            --vector-a: #f44336;
+            --vector-b: #2196f3;
+            --vector-c: #4caf50;
+            --vector-d: #9c27b0;
+            --vector-cross: #ff9800;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #ui-panel {
+            width: 400px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+
+        .formula-box {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--formula-color);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+
+        .input-group.vector-a { border-left: 4px solid var(--vector-a); }
+        .input-group.vector-b { border-left: 4px solid var(--vector-b); }
+        .input-group.vector-c { border-left: 4px solid var(--vector-c); }
+        .input-group.vector-d { border-left: 4px solid var(--vector-d); }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85em;
+            margin-bottom: 2px;
+            color: #aaa;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .result-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 5px;
+        }
+
+        .method-title {
+            font-weight: bold;
+            color: var(--formula-color);
+            margin-bottom: 5px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 2px;
+        }
+
+        .step-by-step {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+            padding: 5px;
+        }
+
+        .vector-val { color: #81d4fa; }
+        .scalar-val { color: #a5d6a7; }
+
+        #controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="canvas-container">
+    <div id="controls-hint">
+        Left Click: Rotate | Right Click: Pan | Scroll: Zoom (limited)
+    </div>
+</div>
+
+<div id="ui-panel">
+    <h2>Triple Cross Product</h2>
+    <div class="formula-box">
+        (a × b) × (c × d) = b · [a,c,d] − a · [b,c,d] = c · [a,b,d] − d · [a,b,c]
+    </div>
+
+    <div class="input-group vector-a">
+        <h3>Vector a</h3>
+        <div class="input-row">
+            <div class="input-field"><label>x</label><input type="number" id="ax" value="1" step="0.1"></div>
+            <div class="input-field"><label>y</label><input type="number" id="ay" value="0" step="0.1"></div>
+            <div class="input-field"><label>z</label><input type="number" id="az" value="0" step="0.1"></div>
+        </div>
+    </div>
+
+    <div class="input-group vector-b">
+        <h3>Vector b</h3>
+        <div class="input-row">
+            <div class="input-field"><label>x</label><input type="number" id="bx" value="0" step="0.1"></div>
+            <div class="input-field"><label>y</label><input type="number" id="by" value="1" step="0.1"></div>
+            <div class="input-field"><label>z</label><input type="number" id="bz" value="0" step="0.1"></div>
+        </div>
+    </div>
+
+    <div class="input-group vector-c">
+        <h3>Vector c</h3>
+        <div class="input-row">
+            <div class="input-field"><label>x</label><input type="number" id="cx" value="0" step="0.1"></div>
+            <div class="input-field"><label>y</label><input type="number" id="cy" value="0" step="0.1"></div>
+            <div class="input-field"><label>z</label><input type="number" id="cz" value="1" step="0.1"></div>
+        </div>
+    </div>
+
+    <div class="input-group vector-d">
+        <h3>Vector d</h3>
+        <div class="input-row">
+            <div class="input-field"><label>x</label><input type="number" id="dx" value="1" step="0.1"></div>
+            <div class="input-field"><label>y</label><input type="number" id="dy" value="1" step="0.1"></div>
+            <div class="input-field"><label>z</label><input type="number" id="dz" value="0" step="0.1"></div>
+        </div>
+    </div>
+
+    <div id="results">
+        <div class="result-section" id="method1">
+            <div class="method-title">Method 1: Direct (a × b) × (c × d)</div>
+            <div class="step-by-step" id="step1"></div>
+        </div>
+        <div class="result-section" id="method2">
+            <div class="method-title">Method 2: b·[a,c,d] − a·[b,c,d]</div>
+            <div class="step-by-step" id="step2"></div>
+        </div>
+        <div class="result-section" id="method3">
+            <div class="method-title">Method 3: c·[a,b,d] − d·[a,b,c]</div>
+            <div class="step-by-step" id="step3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+    // --- Vector Math Utilities ---
+    class Vec3 {
+        constructor(x, y, z) { this.x = x; this.y = y; this.z = z; }
+        add(v) { return new Vec3(this.x + v.x, this.y + v.y, this.z + v.z); }
+        sub(v) { return new Vec3(this.x - v.x, this.y - v.y, this.z - v.z); }
+        mul(s) { return new Vec3(this.x * s, this.y * s, this.z * s); }
+        dot(v) { return this.x * v.x + this.y * v.y + this.z * v.z; }
+        cross(v) {
+            return new Vec3(
+                this.y * v.z - this.z * v.y,
+                this.z * v.x - this.x * v.z,
+                this.x * v.y - this.y * v.x
+            );
+        }
+        length() { return Math.sqrt(this.dot(this)); }
+        static box(a, b, c) { return a.dot(b.cross(c)); }
+        toString() { return `(${this.x.toFixed(2)}, ${this.y.toFixed(2)}, ${this.z.toFixed(2)})`; }
+    }
+
+    // --- Scene Setup ---
+    let scene, camera, renderer, controls;
+    const vectorGroup = new THREE.Group();
+    const labelGroup = new THREE.Group();
+
+    function init3D() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x121212);
+
+        camera = new THREE.PerspectiveCamera(75, (window.innerWidth - 400) / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth - 400, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        // Grid and Axes
+        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+        gridHelper.name = 'grid';
+        scene.add(gridHelper);
+
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        scene.add(vectorGroup);
+        scene.add(labelGroup);
+
+        window.addEventListener('resize', onWindowResize, false);
+        animate();
+    }
+
+    function onWindowResize() {
+        camera.aspect = (window.innerWidth - 400) / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth - 400, window.innerHeight);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        
+        // Render labels if we had any
+        
+        renderer.render(scene, camera);
+    }
+
+    // --- Visualization logic ---
+    function createTextLabel(text, position, color) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 128;
+        context.fillStyle = color;
+        context.font = 'Bold 40px Arial';
+        context.textAlign = 'center';
+        context.fillText(text, 128, 64);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.position.copy(position);
+        sprite.scale.set(1, 0.5, 1);
+        return sprite;
+    }
+
+    function drawVector(vec, color, name, origin = new Vec3(0,0,0)) {
+        const dir = new THREE.Vector3(vec.x, vec.y, vec.z);
+        const len = dir.length();
+        if (len < 0.01) return;
+        
+        const originVec = new THREE.Vector3(origin.x, origin.y, origin.z);
+        dir.normalize();
+        const arrowHelper = new THREE.ArrowHelper(
+            dir, 
+            originVec, 
+            len, 
+            color,
+            0.2 * Math.min(len, 1),
+            0.1 * Math.min(len, 1)
+        );
+        vectorGroup.add(arrowHelper);
+
+        // Add label
+        const labelPos = originVec.clone().add(dir.clone().multiplyScalar(len + 0.2));
+        const hexColor = '#' + color.toString(16).padStart(6, '0');
+        const label = createTextLabel(name, labelPos, hexColor);
+        labelGroup.add(label);
+    }
+
+    function clearVectors() {
+        while(vectorGroup.children.length > 0){ 
+            vectorGroup.remove(vectorGroup.children[0]); 
+        }
+        while(labelGroup.children.length > 0){ 
+            labelGroup.remove(labelGroup.children[0]); 
+        }
+    }
+
+    // --- Main Logic ---
+    function update() {
+        const a = new Vec3(parseFloat(document.getElementById('ax').value) || 0, parseFloat(document.getElementById('ay').value) || 0, parseFloat(document.getElementById('az').value) || 0);
+        const b = new Vec3(parseFloat(document.getElementById('bx').value) || 0, parseFloat(document.getElementById('by').value) || 0, parseFloat(document.getElementById('bz').value) || 0);
+        const c = new Vec3(parseFloat(document.getElementById('cx').value) || 0, parseFloat(document.getElementById('cy').value) || 0, parseFloat(document.getElementById('cz').value) || 0);
+        const d = new Vec3(parseFloat(document.getElementById('dx').value) || 0, parseFloat(document.getElementById('dy').value) || 0, parseFloat(document.getElementById('dz').value) || 0);
+
+        clearVectors();
+        
+        // Colors
+        const colA = 0xf44336;
+        const colB = 0x2196f3;
+        const colC = 0x4caf50;
+        const colD = 0x9c27b0;
+        const colCross = 0xff9800;
+        const colInter = 0x00bcd4;
+
+        // Draw primary vectors
+        drawVector(a, colA, 'a');
+        drawVector(b, colB, 'b');
+        drawVector(c, colC, 'c');
+        drawVector(d, colD, 'd');
+
+        // Draw basis vectors
+        drawVector(new Vec3(1,0,0), 0xffffff, 'i');
+        drawVector(new Vec3(0,1,0), 0xffffff, 'j');
+        drawVector(new Vec3(0,0,1), 0xffffff, 'k');
+
+        // Draw origin
+        const originGeo = new THREE.SphereGeometry(0.05, 16, 16);
+        const originMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const originMesh = new THREE.Mesh(originGeo, originMat);
+        vectorGroup.add(originMesh);
+
+        // Calculations
+        // Method 1: (a x b) x (c x d)
+        const ab = a.cross(b);
+        const cd = c.cross(d);
+        const result1 = ab.cross(cd);
+
+        drawVector(ab, colInter, 'a×b');
+        drawVector(cd, colInter, 'c×d');
+        drawVector(result1, colCross, 'Res');
+
+        let s1 = `1. a × b = ${ab.toString()}\n`;
+        s1 += `2. c × d = ${cd.toString()}\n`;
+        s1 += `3. Result = (a×b) × (c×d) = ${result1.toString()}`;
+        document.getElementById('step1').innerText = s1;
+
+        // Method 2: b · [a,c,d] - a · [b,c,d]
+        const boxACD = Vec3.box(a, c, d);
+        const boxBCD = Vec3.box(b, c, d);
+        const term2_1 = b.mul(boxACD);
+        const term2_2 = a.mul(boxBCD);
+        const result2 = term2_1.sub(term2_2);
+
+        let s2 = `1. [a,c,d] = ${boxACD.toFixed(4)}\n`;
+        s2 += `2. [b,c,d] = ${boxBCD.toFixed(4)}\n`;
+        s2 += `3. b·[a,c,d] = ${term2_1.toString()}\n`;
+        s2 += `4. a·[b,c,d] = ${term2_2.toString()}\n`;
+        s2 += `5. Result = ${result2.toString()}`;
+        document.getElementById('step2').innerText = s2;
+
+        // Method 3: c · [a,b,d] - d · [a,b,c]
+        const boxABD = Vec3.box(a, b, d);
+        const boxABC = Vec3.box(a, b, c);
+        const term3_1 = c.mul(boxABD);
+        const term3_2 = d.mul(boxABC);
+        const result3 = term3_1.sub(term3_2);
+
+        let s3 = `1. [a,b,d] = ${boxABD.toFixed(4)}\n`;
+        s3 += `2. [a,b,c] = ${boxABC.toFixed(4)}\n`;
+        s3 += `3. c·[a,b,d] = ${term3_1.toString()}\n`;
+        s3 += `4. d·[a,b,c] = ${term3_2.toString()}\n`;
+        s3 += `5. Result = ${result3.toString()}`;
+        document.getElementById('step3').innerText = s3;
+
+        // Scaling
+        const maxCoord = Math.max(
+            a.length(), b.length(), c.length(), d.length(),
+            ab.length(), cd.length(), result1.length(),
+            1
+        );
+        
+        // Zoom limit - prevent zooming out too much
+        controls.maxDistance = maxCoord * 5;
+        controls.minDistance = 0.5;
+        
+        // Adjust grid size to scale
+        scene.remove(scene.getObjectByName('grid'));
+        const gridHelper = new THREE.GridHelper(maxCoord * 4, 20, 0x444444, 0x222222);
+        gridHelper.name = 'grid';
+        scene.add(gridHelper);
+    }
+
+    // --- UI Helpers ---
+    function setupInputs() {
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const next = inputs[index + 1];
+                    if (next) next.focus();
+                    else inputs[0].focus();
+                }
+                // Prevent letters
+                if (e.key.length === 1 && !/[0-9\.\-]/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    e.preventDefault();
+                }
+            });
+            input.addEventListener('input', (e) => {
+                // Sanitize input to remove any non-numeric characters that might have been pasted
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const oldVal = input.value;
+                const newVal = oldVal.replace(/[^0-9\.\-]/g, '');
+                if (oldVal !== newVal) {
+                    input.value = newVal;
+                    input.setSelectionRange(start, end);
+                }
+                update();
+            });
+        });
+    }
+
+    init3D();
+    setupInputs();
+    update();
+
+</script>
+</body>
+</html>

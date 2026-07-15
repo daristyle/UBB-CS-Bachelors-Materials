@@ -1,0 +1,5 @@
+1 single room
+2 single room
+3 double room
+4 double room
+5 family room

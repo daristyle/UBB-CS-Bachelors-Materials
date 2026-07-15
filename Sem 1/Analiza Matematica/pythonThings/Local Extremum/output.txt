@@ -1,0 +1,135 @@
+The sequence converges to  -1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  370184 steps, starting from  -10  with a gradient of  0.001
+The sequence converges to  -1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  369837 steps, starting from  -5  with a gradient of  0.001
+The sequence converges to  -1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  369033 steps, starting from  -1  with a gradient of  0.001
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.001
+The sequence converges to  1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  369033 steps, starting from  1  with a gradient of  0.001
+The sequence converges to  1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  369837 steps, starting from  5  with a gradient of  0.001
+The sequence converges to  1.23e-321 and the value of the function  x^2  in this point is  0.0 . This was achived in  370184 steps, starting from  10  with a gradient of  0.001
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36799 steps, starting from  -10  with a gradient of  0.01
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36765 steps, starting from  -5  with a gradient of  0.01
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36685 steps, starting from  -1  with a gradient of  0.01
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.01
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36685 steps, starting from  1  with a gradient of  0.01
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36765 steps, starting from  5  with a gradient of  0.01
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  36799 steps, starting from  10  with a gradient of  0.01
+The sequence converges to  -1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3344 steps, starting from  -10  with a gradient of  0.1
+The sequence converges to  -1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3340 steps, starting from  -5  with a gradient of  0.1
+The sequence converges to  -1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3333 steps, starting from  -1  with a gradient of  0.1
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.1
+The sequence converges to  1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3333 steps, starting from  1  with a gradient of  0.1
+The sequence converges to  1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3340 steps, starting from  5  with a gradient of  0.1
+The sequence converges to  1e-323 and the value of the function  x^2  in this point is  0.0 . This was achived in  3344 steps, starting from  10  with a gradient of  0.1
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  -10  with a gradient of  0.5
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  -5  with a gradient of  0.5
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  -1  with a gradient of  0.5
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.5
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  1  with a gradient of  0.5
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  5  with a gradient of  0.5
+The sequence converges to  0.0 and the value of the function  x^2  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  0.5
+The sequence converges to  5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.75
+The sequence converges to  5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.75
+The sequence converges to  5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.75
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.75
+The sequence converges to  -5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.75
+The sequence converges to  -5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  5  with a gradient of  0.75
+The sequence converges to  -5e-324 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  10  with a gradient of  0.75
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.99
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.99
+The sequence converges to  1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.99
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  0.99
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.99
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  5  with a gradient of  0.99
+The sequence converges to  -1.2e-322 and the value of the function  x^2  in this point is  0.0 . This was achived in  1000000 steps, starting from  10  with a gradient of  0.99
+The sequence converges to  10 and the value of the function  x^2  in this point is  100 . This was achived in  1000000 steps, starting from  -10  with a gradient of  1
+The sequence converges to  5 and the value of the function  x^2  in this point is  25 . This was achived in  1000000 steps, starting from  -5  with a gradient of  1
+The sequence converges to  1 and the value of the function  x^2  in this point is  1 . This was achived in  1000000 steps, starting from  -1  with a gradient of  1
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  1
+The sequence converges to  -1 and the value of the function  x^2  in this point is  1 . This was achived in  1000000 steps, starting from  1  with a gradient of  1
+The sequence converges to  -5 and the value of the function  x^2  in this point is  25 . This was achived in  1000000 steps, starting from  5  with a gradient of  1
+The sequence converges to  -10 and the value of the function  x^2  in this point is  100 . This was achived in  1000000 steps, starting from  10  with a gradient of  1
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  -10  with a gradient of  1.5
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  -5  with a gradient of  1.5
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  -1  with a gradient of  1.5
+The sequence converges to  0 and the value of the function  x^2  in this point is  0 . This was achived in  1 steps, starting from  0  with a gradient of  1.5
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  1  with a gradient of  1.5
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  5  with a gradient of  1.5
+The sequence converges to  nan and the value of the function  x^2  in this point is  nan . This was achived in  1000000 steps, starting from  10  with a gradient of  1.5
+The sequence converges to  -10.044399477645172 and the value of the function  e^x  in this point is  4.3428290358385405e-05 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.001
+The sequence converges to  -7.046136426909432 and the value of the function  e^x  in this point is  0.0008707667375508155 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.001
+The sequence converges to  -6.910471822958384 and the value of the function  e^x  in this point is  0.000997287142490435 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.001
+The sequence converges to  -6.908757231405203 and the value of the function  e^x  in this point is  0.0009989985493636603 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.001
+The sequence converges to  -6.908126044197751 and the value of the function  e^x  in this point is  0.0009996293035093153 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.001
+The sequence converges to  -6.907766996981779 and the value of the function  e^x  in this point is  0.0009999882820690132 . This was achived in  1000000 steps, starting from  5  with a gradient of  0.001
+The sequence converges to  -12.032431685342251 and the value of the function  e^x  in this point is  5.948141825946275e-06 . This was achived in  1000000 steps, starting from  10  with a gradient of  0.001
+The sequence converges to  -10.37431764224462 and the value of the function  e^x  in this point is  3.122418378005087e-05 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.01
+The sequence converges to  -9.225073729519604 and the value of the function  e^x  in this point is  9.85374647293599e-05 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.01
+The sequence converges to  -9.21061526829266 and the value of the function  e^x  in this point is  9.997251414640533e-05 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.01
+The sequence converges to  -9.210443973503933 and the value of the function  e^x  in this point is  9.998964038387025e-05 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.01
+The sequence converges to  -9.21038126885164 and the value of the function  e^x  in this point is  9.99959103960809e-05 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.01
+The sequence converges to  -9.210347772051524 and the value of the function  e^x  in this point is  9.999925999520396e-05 . This was achived in  1000000 steps, starting from  5  with a gradient of  0.01
+The sequence converges to  -210.2646579480672 and the value of the function  e^x  in this point is  4.821912373608897e-92 . This was achived in  2 steps, starting from  10  with a gradient of  0.01
+The sequence converges to  -11.711993114923565 and the value of the function  e^x  in this point is  8.194944526961836e-06 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.1
+The sequence converges to  -11.514410750296534 and the value of the function  e^x  in this point is  9.985158171640396e-06 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.1
+The sequence converges to  -11.51295690999001 and the value of the function  e^x  in this point is  9.999685554746083e-06 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.1
+The sequence converges to  -11.51294023866042 and the value of the function  e^x  in this point is  9.999852264189391e-06 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.1
+The sequence converges to  -11.512934450948585 and the value of the function  e^x  in this point is  9.999910140620174e-06 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.1
+The sequence converges to  -11.685148904732475 and the value of the function  e^x  in this point is  8.417910625587078e-06 . This was achived in  1000000 steps, starting from  5  with a gradient of  0.1
+The sequence converges to  -2192.646579480672 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  0.1
+The sequence converges to  -13.165474124488325 and the value of the function  e^x  in this point is  1.915610620095977e-06 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.5
+The sequence converges to  -13.122663220658753 and the value of the function  e^x  in this point is  1.999400403388144e-06 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.5
+The sequence converges to  -13.122373908115446 and the value of the function  e^x  in this point is  1.999978938688662e-06 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.5
+The sequence converges to  -13.122371043475944 and the value of the function  e^x  in this point is  1.9999846679155383e-06 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.5
+The sequence converges to  -13.12237069085103 and the value of the function  e^x  in this point is  1.9999853731600843e-06 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.5
+The sequence converges to  -69.2065795512883 and the value of the function  e^x  in this point is  8.789504432276197e-31 . This was achived in  2 steps, starting from  5  with a gradient of  0.5
+The sequence converges to  -11003.232897403359 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  0.5
+The sequence converges to  -13.55677486672163 and the value of the function  e^x  in this point is  1.2952914027190368e-06 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.75
+The sequence converges to  -13.528029614355605 and the value of the function  e^x  in this point is  1.333065188509251e-06 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.75
+The sequence converges to  -13.527837425384039 and the value of the function  e^x  in this point is  1.3333214135578863e-06 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.75
+The sequence converges to  -13.527835765903793 and the value of the function  e^x  in this point is  1.333323626180269e-06 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.75
+The sequence converges to  -13.527836546889887 and the value of the function  e^x  in this point is  1.3333225848734654e-06 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.75
+The sequence converges to  -106.30986932693244 and the value of the function  e^x  in this point is  6.764105605474664e-47 . This was achived in  2 steps, starting from  5  with a gradient of  0.75
+The sequence converges to  -16509.84934610504 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  0.75
+The sequence converges to  -13.827466174311713 and the value of the function  e^x  in this point is  9.881155680667596e-07 . This was achived in  1000000 steps, starting from  -10  with a gradient of  0.99
+The sequence converges to  -13.805613526562382 and the value of the function  e^x  in this point is  1.0099461689888053e-06 . This was achived in  1000000 steps, starting from  -5  with a gradient of  0.99
+The sequence converges to  -13.805468441664877 and the value of the function  e^x  in this point is  1.0100927075552288e-06 . This was achived in  1000000 steps, starting from  -1  with a gradient of  0.99
+The sequence converges to  -13.805467420198177 and the value of the function  e^x  in this point is  1.0100937393318202e-06 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.99
+The sequence converges to  -13.805469792224736 and the value of the function  e^x  in this point is  1.0100913433654849e-06 . This was achived in  1000000 steps, starting from  1  with a gradient of  0.99
+The sequence converges to  -141.92902751155083 and the value of the function  e^x  in this point is  2.296183172135922e-62 . This was achived in  2 steps, starting from  5  with a gradient of  0.99
+The sequence converges to  -21796.20113685865 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  0.99
+The sequence converges to  -13.83729884434895 and the value of the function  e^x  in this point is  9.784473637532374e-07 . This was achived in  1000000 steps, starting from  -10  with a gradient of  1
+The sequence converges to  -13.815662368556383 and the value of the function  e^x  in this point is  9.998482009305357e-07 . This was achived in  1000000 steps, starting from  -5  with a gradient of  1
+The sequence converges to  -13.815518755937049 and the value of the function  e^x  in this point is  9.999918020608285e-07 . This was achived in  1000000 steps, starting from  -1  with a gradient of  1
+The sequence converges to  -13.815517755944247 and the value of the function  e^x  in this point is  9.99992802045932e-07 . This was achived in  1000000 steps, starting from  0  with a gradient of  1
+The sequence converges to  -13.815520213611446 and the value of the function  e^x  in this point is  9.999903443994437e-07 . This was achived in  1000000 steps, starting from  1  with a gradient of  1
+The sequence converges to  -143.4131591025766 and the value of the function  e^x  in this point is  5.205427108495643e-63 . This was achived in  2 steps, starting from  5  with a gradient of  1
+The sequence converges to  -22016.465794806718 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  1
+The sequence converges to  -14.235554307690203 and the value of the function  e^x  in this point is  6.570180748255649e-07 . This was achived in  1000000 steps, starting from  -10  with a gradient of  1.5
+The sequence converges to  -14.221078215150333 and the value of the function  e^x  in this point is  6.665983041200546e-07 . This was achived in  1000000 steps, starting from  -5  with a gradient of  1.5
+The sequence converges to  -14.220983207974426 and the value of the function  e^x  in this point is  6.666616387509686e-07 . This was achived in  1000000 steps, starting from  -1  with a gradient of  1.5
+The sequence converges to  -14.220983078731418 and the value of the function  e^x  in this point is  6.666617249123293e-07 . This was achived in  1000000 steps, starting from  0  with a gradient of  1.5
+The sequence converges to  -14.22099371779034 and the value of the function  e^x  in this point is  6.66654632296687e-07 . This was achived in  1000000 steps, starting from  1  with a gradient of  1.5
+The sequence converges to  -217.61973865386489 and the value of the function  e^x  in this point is  3.0828212888044e-95 . This was achived in  2 steps, starting from  5  with a gradient of  1.5
+The sequence converges to  -33029.69869221008 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  1.5
+The sequence converges to  -23.025858738377153 and the value of the function  e^x  in this point is  9.999921915937899e-11 . This was achived in  1000000 steps, starting from  -10  with a gradient of  10000
+The sequence converges to  -72.37946999085467 and the value of the function  e^x  in this point is  3.6812522696276373e-32 . This was achived in  2 steps, starting from  -5  with a gradient of  10000
+The sequence converges to  -3679.7944117144234 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  -1  with a gradient of  10000
+The sequence converges to  -10000.0 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  0  with a gradient of  10000
+The sequence converges to  -27181.818284590452 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  1  with a gradient of  10000
+The sequence converges to  -1484126.591025766 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  5  with a gradient of  10000
+The sequence converges to  -220264647.9480672 and the value of the function  e^x  in this point is  0.0 . This was achived in  2 steps, starting from  10  with a gradient of  10000
+The sequence converges to  -1 and the value of the function  x^3 - 3 * x  in this point is  2 . This was achived in  1 steps, starting from  -1  with a gradient of  0.001
+The sequence converges to  0.9999999999999908 and the value of the function  x^3 - 3 * x  in this point is  -2.0 . This was achived in  5467 steps, starting from  0  with a gradient of  0.001
+The sequence converges to  1 and the value of the function  x^3 - 3 * x  in this point is  -2 . This was achived in  1 steps, starting from  1  with a gradient of  0.001
+The sequence converges to  1.0000000000000184 and the value of the function  x^3 - 3 * x  in this point is  -1.9999999999999998 . This was achived in  5168 steps, starting from  2  with a gradient of  0.001
+The sequence converges to  -1 and the value of the function  x^3 - 3 * x  in this point is  2 . This was achived in  1 steps, starting from  -1  with a gradient of  0.01
+The sequence converges to  0.9999999999999991 and the value of the function  x^3 - 3 * x  in this point is  -2.0 . This was achived in  571 steps, starting from  0  with a gradient of  0.01
+The sequence converges to  1 and the value of the function  x^3 - 3 * x  in this point is  -2 . This was achived in  1 steps, starting from  1  with a gradient of  0.01
+The sequence converges to  1.0000000000000018 and the value of the function  x^3 - 3 * x  in this point is  -2.0 . This was achived in  541 steps, starting from  2  with a gradient of  0.01
+The sequence converges to  -1 and the value of the function  x^3 - 3 * x  in this point is  2 . This was achived in  1 steps, starting from  -1  with a gradient of  0.1
+The sequence converges to  1.0 and the value of the function  x^3 - 3 * x  in this point is  -2.0 . This was achived in  44 steps, starting from  0  with a gradient of  0.1
+The sequence converges to  1 and the value of the function  x^3 - 3 * x  in this point is  -2 . This was achived in  1 steps, starting from  1  with a gradient of  0.1
+The sequence converges to  1.0 and the value of the function  x^3 - 3 * x  in this point is  -2.0 . This was achived in  40 steps, starting from  2  with a gradient of  0.1
+The sequence converges to  -1 and the value of the function  x^3 - 3 * x  in this point is  2 . This was achived in  1 steps, starting from  -1  with a gradient of  0.5
+The sequence converges to  0.8536134500022601 and the value of the function  x^3 - 3 * x  in this point is  -1.9388498545426462 . This was achived in  1000000 steps, starting from  0  with a gradient of  0.5
+The sequence converges to  1 and the value of the function  x^3 - 3 * x  in this point is  -2 . This was achived in  1 steps, starting from  1  with a gradient of  0.5
+The sequence converges to  -inf and the value of the function  x^3 - 3 * x  in this point is  -inf . This was achived in  11 steps, starting from  2  with a gradient of  0.5

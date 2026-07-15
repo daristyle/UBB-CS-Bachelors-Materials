@@ -1,0 +1,6 @@
+*.pdf filter=lfs diff=lfs merge=lfs -text
+*.notewise filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.in filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+grapgh1m*.txt filter=lfs diff=lfs merge=lfs -text
