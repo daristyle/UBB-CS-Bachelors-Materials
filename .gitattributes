@@ -4,3 +4,4 @@
 *.in filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 grapgh1m*.txt filter=lfs diff=lfs merge=lfs -text
+graph1m*.txt filter=lfs diff=lfs merge=lfs -text
